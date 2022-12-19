@@ -1,11 +1,16 @@
 import os
-from sqlalchemy import Column, String, create_engine
+from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
 import json
+from settings import DB_NAME, DB_USER, DB_PASSWORD
 
-database_path = os.environ['DATABASE_URL']
-if database_path.startswith("postgres://"):
-    database_path = database_path.replace("postgres://", "postgresql://", 1)
+# compose database_path
+db_user_credentials = DB_USER + ":" + DB_PASSWORD
+if DB_USER or DB_PASSWORD:
+    database_path = 'postgresql://{}@{}/{}'.format(
+        db_user_credentials, 'localhost:5432', DB_NAME)
+else:
+    database_path = 'postgresql://{}/{}'.format('localhost:5432', DB_NAME)
 
 db = SQLAlchemy()
 
@@ -19,28 +24,78 @@ def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
-    db.create_all()
+    with app.app_context():
+      db.create_all()
 
 
-'''
-Person
-Have title and release year
-'''
+class Photographer(db.Model):
+    __tablename__ = 'photographers'
 
+    id = Column(Integer, primary_key=True)
+    name = Column(String(120), nullable=False)
+    email = Column(String(120), nullable=False)
+    city = Column(String(120), nullable=False)
+    services = Column(db.ARRAY(Integer, dimensions=1))
+    profile_photo = Column(String(255))
+    address = Column(String(255))
+    portfolio_link = Column(String(255))
+    social_media = Column(String(255))
+    bio = Column(db.Text)
 
-class Person(db.Model):
-    __tablename__ = 'People'
+    # relationships
+    photos = db.relationship(
+        'Photo', back_populates='photographer', cascade='all, delete')
+    prices = db.relationship(
+        'Price', back_populates='photographer', cascade='all, delete')
 
-    id = Column(db.Integer, primary_key=True)
-    name = Column(String)
-    catchphrase = Column(String)
-
-    def __init__(self, name, catchphrase=""):
+    def __init__(self, name, email, city):
         self.name = name
-        self.catchphrase = catchphrase
+        self.email = email
+        self.city = city
 
     def format(self):
         return {
             'id': self.id,
             'name': self.name,
-            'catchphrase': self.catchphrase}
+            'city': self.city
+        }
+
+
+class Service(db.Model):
+    __tablename__ = 'services'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(60), nullable=False)
+    image_link = Column(String(255))
+
+    # relationships
+    photos = db.relationship(
+        'Photo', back_populates='service', cascade='all, delete')
+    prices = db.relationship(
+        'Price', back_populates='service', cascade='all, delete')
+
+
+class Photo(db.Model):
+    __tablename__ = 'photos'
+    photographer_id = Column(db.ForeignKey(
+        'photographers.id', ondelete='CASCADE'), primary_key=True)
+    service_id = Column(db.ForeignKey(
+        'services.id', ondelete='CASCADE'), primary_key=True)
+    image = Column(String(255), nullable=False)
+
+    # relationships
+    photographer = db.relationship('Photographer', back_populates='photos')
+    service = db.relationship('Service', back_populates='photos')
+
+
+class Price(db.Model):
+    __tablename__ = 'prices'
+    photographer_id = Column(db.ForeignKey(
+        'photographers.id', ondelete='CASCADE'), primary_key=True)
+    service_id = Column(db.ForeignKey(
+        'services.id', ondelete='CASCADE'), primary_key=True)
+    price = Column(db.Float, nullable=False)
+
+    # relationships
+    photographer = db.relationship('Photographer', back_populates='prices')
+    service = db.relationship('Service', back_populates='prices')
