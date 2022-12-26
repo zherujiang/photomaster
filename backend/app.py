@@ -41,24 +41,56 @@ def create_app(test_config=None):
     @app.route('/services', methods=['POST'])
     def add_services():
         request_data = request.get_json()
+        if not request_data:
+            abort(400)
         service_name = request_data.get('name')
-        service_img = request_data.get('image_link')
+        service_image = request_data.get('image_link')
         
-        new_service = Service(name = service_name)
-        new_service.insert()
-        if service_img:
-            new_service.image_link = service_img
-            new_service.update()
+        try:
+            new_service = Service(name = service_name)
+            new_service.insert()
+            if service_image:
+                new_service.image_link = service_image
+                new_service.update()
+            
+            return jsonify({
+                'success': True,
+                'new services': new_service.format()
+            })
+        except:
+            abort(422)
+    
+    # edit service categories, administrator only
+    # requires administrator permission
+    @app.route('/services/<string:service_name>', methods=['PATCH'])
+    def edit_service(service_name):
+        service_query = Service.query.filter(Service.name==service_name).one_or_none()
+        if not service_query:
+            abort(404)
         
-        return jsonify({
-            'success': True,
-            'new services': new_service.format()
-        })
+        request_data = request.get_json()
+        if not request_data:
+            abort(400)
+            
+        service_name = request_data.get('name')
+        service_image = request_data.get('image_link')
+        
+        try:
+            service_query.name = service_name
+            service_query.image_link = service_image
+            service_query.update()
+            
+            return jsonify({
+                'success': True,
+                'servie udpated': service_query.format()
+            })
+        except:
+            abort(422)
     
     # delete service category (by name), administrator only
     # requires administrator permission
     @app.route('/services/<string:service_name>', methods=['DELETE'])
-    def delete_services(service_name):
+    def delete_service(service_name):
         service_query = Service.query.filter(Service.name==service_name).one_or_none()
         if not service_query:
             abort(404)
@@ -291,6 +323,49 @@ def create_app(test_config=None):
             })
         except:
             abort(422)
+    
+    
+    # error handling
+    
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            'success': False,
+            'error': 400,
+            'message': 'bad request'
+        }), 400
+    
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            'success': False,
+            'error': 404,
+            'message': 'resource not found'
+        }), 404
+    
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return jsonify({
+            'success': False,
+            'message': 'method not allowed',
+            'error': 405
+        }), 405
+    
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            'success': False,
+            'error': 422,
+            'message': 'unprocessable'
+        }), 422
+    
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            'success': False,
+            'error': 500,
+            'message': 'internal server error'
+        }), 500
     
     return app
 
