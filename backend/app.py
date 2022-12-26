@@ -4,6 +4,7 @@ from models import setup_db, Photographer, Service, Photo, Price
 from flask_cors import CORS
 from settings import UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from werkzeug.utils import secure_filename
+from auth import requires_auth, AuthError
 
 def find_city(zip_code):
     return "A helper function to return a city based on the zip code entered"
@@ -39,7 +40,8 @@ def create_app(test_config=None):
     # add service categories, administrator only
     # requires administrator permission
     @app.route('/services', methods=['POST'])
-    def add_services():
+    @requires_auth(permission='post:services')
+    def add_services(payload):
         request_data = request.get_json()
         if not request_data:
             abort(400)
@@ -63,7 +65,8 @@ def create_app(test_config=None):
     # edit service categories, administrator only
     # requires administrator permission
     @app.route('/services/<string:service_name>', methods=['PATCH'])
-    def edit_service(service_name):
+    @requires_auth(permission='patch:services')
+    def edit_service(payload, service_name):
         service_query = Service.query.filter(Service.name==service_name).one_or_none()
         if not service_query:
             abort(404)
@@ -90,7 +93,8 @@ def create_app(test_config=None):
     # delete service category (by name), administrator only
     # requires administrator permission
     @app.route('/services/<string:service_name>', methods=['DELETE'])
-    def delete_service(service_name):
+    @requires_auth(permission='delete:services')
+    def delete_service(payload, service_name):
         service_query = Service.query.filter(Service.name==service_name).one_or_none()
         if not service_query:
             abort(404)
@@ -171,10 +175,15 @@ def create_app(test_config=None):
     # edit photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['GET', 'PATCH'])
-    def update_photographer(photographer_id):
+    @requires_auth()
+    def update_photographer(payload, photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
+        
+        # check if the user making the request is the registered photographer
+        if payload.get('user_id') != photographer_id:
+            abort(401)
             
         if request.method == 'GET':
             # load the photographer information and render the form
@@ -226,19 +235,24 @@ def create_app(test_config=None):
     # delete the photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    def delete_photographer(photographer_id):
+    @requires_auth()
+    def delete_photographer(payload, photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
-        else:
-            try:
-                photographer.delete()
-                return jsonify({
-                    'success': True,
-                    'photograhper deleted': photographer.id
-                })
-            except:
-                abort(422)
+        
+        # check if the user making the request is the registered photographer
+        if payload.get('user_id') != photographer_id:
+            abort(401)
+            
+        try:
+            photographer.delete()
+            return jsonify({
+                'success': True,
+                'photograhper deleted': photographer.id
+            })
+        except:
+            abort(422)
 
     @app.route('/photos/<int:photographer_id>')
     def get_photos(photographer_id):
@@ -262,11 +276,16 @@ def create_app(test_config=None):
     # add photos for a photographer
     # this endpoint requires authentication
     @app.route('/photos/<int:photographer_id>', methods=['POST'])
-    def add_photos(photographer_id):
+    @requires_auth()
+    def add_photos(payload, photographer_id):
         app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
+        
+        # check if the user making the request is the registered photographer
+        if payload.get('user_id') != photographer_id:
+            abort(401)
         
         if 'file' not in request.files:
             flash('No file part')
@@ -308,10 +327,16 @@ def create_app(test_config=None):
     # delete a photo from a photographers' gallery
     # this endpoint requires authentication
     @app.route('/photos/<int:photographer_id>', methods=['DELETE'])
-    def delete_photos(photographer_id):
+    @requires_auth()
+    def delete_photos(payload, photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
+        
+        # check if the user making the request is the registered photographer
+        if payload.get('user_id') != photographer_id:
+            abort(401)
+            
         image_path = request.args('image_path')
         photo_query = Photo.query.filter(Photo.image_path==image_path).one_or_none()
         
@@ -334,6 +359,14 @@ def create_app(test_config=None):
             'error': 400,
             'message': 'bad request'
         }), 400
+    
+    @app.errorhandler(401)
+    def unauthorized(error):
+        return jsonify({
+            'success': False,
+            'error': 401,
+            'message': 'unauthorized user'
+        }), 401
     
     @app.errorhandler(404)
     def not_found(error):
@@ -367,6 +400,14 @@ def create_app(test_config=None):
             'message': 'internal server error'
         }), 500
     
+    @app.errorhandler(AuthError)
+    def authentication_error(error):
+        return jsonify({
+            'success': False,
+            'error': error.status_code,
+            'message': error.error
+        }), error.status_code
+        
     return app
 
 app = create_app()
