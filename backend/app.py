@@ -10,7 +10,7 @@ def find_city(zip_code):
 
 def paginate_photographers(selection, page):
     RESULTS_PER_PAGE = 10
-    photographers = [photographer.format() for photographer in selection]
+    photographers = [photographer.overview() for photographer in selection]
     start = RESULTS_PER_PAGE * page + 1
     end = start + RESULTS_PER_PAGE
     current_photographers = photographers[start:end]
@@ -35,44 +35,106 @@ def create_app(test_config=None):
             'success': True,
             'services': services
         })
-
+    
+    # add service categories, administrator only
+    # requires administrator permission
+    @app.route('/services', methods=['POST'])
+    def add_services():
+        request_data = request.get_json()
+        service_name = request_data.get('name')
+        service_img = request_data.get('image_link')
+        
+        new_service = Service(name = service_name)
+        new_service.insert()
+        if service_img:
+            new_service.image_link = service_img
+            new_service.update()
+        
+        return jsonify({
+            'success': True,
+            'new services': new_service.format()
+        })
+    
+    # delete service category (by name), administrator only
+    # requires administrator permission
+    @app.route('/services/<string:service_name>', methods=['DELETE'])
+    def delete_services(service_name):
+        service_query = Service.query.filter(Service.name==service_name).one_or_none()
+        if not service_query:
+            abort(404)
+        
+        service_id = service_query.id
+        affected_photographers = Photographer.query.\
+            filter(Photographer.services.contains(service_id)).all()
+        
+        try:
+            # delete the service from photographers that provide this service
+            for photographer in affected_photographers:
+                photographer.services.remove(service_id)
+            
+            # delete the service category, related photos and prices will be auto-deleted    
+            service_query.delete()
+            
+            return jsonify({
+                'success': True,
+                'deleted services': service_id,
+                'affected photographers': \
+                    [photographer.id for photographer in affected_photographers] 
+            })
+        except:
+            abort(422)
+    
     # search photographers
     @app.route('/photographers')
-    def get_photographers():
-        service_type = request.args.get('service')
+    def search_photographers():
+        service_id = request.args.get('service')
         location = request.args.get('location')
         city = find_city(location)
         current_page = request.args.get('page')
-        if service_type and city:
+        if service_id and city:
             try:
                 photographer_query = Photographer.query.\
-                    filter(Photographer.services.contains(service_type)).\
+                    filter(Photographer.services.contains(service_id)).\
                     filter(Photographer.city==city).order_by(Photographer.name).all()
             except:
                 abort(422)
-                
+            
+            # paginate search results and return short information    
             photographers = paginate_photographers(photographer_query, current_page)
             return jsonify({
                 'success': True,
-                'photographer': photographers
+                'photographers': photographers
             })
             
         elif city == None:
             return jsonify({
                 'success': False,
-                'message': 'city or zip code not valid',
+                'message': 'invalid city or zip code',
                 'error': 400
             })
         else:
             abort(400)        
 
+    # get details of a photographer
+    @app.route('/photographer-details/<int:photographer_id>')
+    def view_photographer_details(photographer_id):
+        photographer_query = Photographer.query.\
+            filter(Photographer.id==photographer_id).one_or_none()
+        
+        if not photographer_query:
+            abort(404)
+        else:
+            return jsonify({
+                'success': True,
+                'photographer': photographer_query.details()
+            })
 
-    # add a photographer
+    # add a photographer, to be completed
     @app.route('/photographers', methods=['POST'])
     def create_photographer():
         new_photographer = Photographer(name = 'nametest', email = 'emailtest')
         new_photographer.insert()
-        return "This API should create a new photographer via third party quthentication service"
+        return "This API should create a new photographer via third party authentication service"
     
     # edit photographer
     # this endpoint requires authentication
@@ -93,7 +155,7 @@ def create_app(test_config=None):
             
             return jsonify({
                 'success': True,
-                'photographer': photographer.format(),
+                'photographer': photographer.details(),
                 'photos': photos,
                 'prices': prices
             })
@@ -109,6 +171,9 @@ def create_app(test_config=None):
                 social_media = request_body.get('social_media')
                 bio = request_body.get('bio')
                 
+                # todo: add price for selected services
+                
+                # update photographer with submitted information
                 photographer.city = city
                 photographer.services = services
                 photographer.address = address
@@ -121,7 +186,7 @@ def create_app(test_config=None):
                 
                 return jsonify({
                     'success': True,
-                    'photographer updated': photographer.format()
+                    'photographer updated': photographer.details()
                 })
             except:
                 abort(422)
