@@ -25,7 +25,9 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     with app.app_context():
-      db.create_all()
+        db.create_all()
+
+    return db
 
 
 class Service(db.Model):
@@ -40,11 +42,11 @@ class Service(db.Model):
         'Photo', back_populates='service', cascade='all, delete')
     prices = db.relationship(
         'Price', back_populates='service', cascade='all, delete')
-    
+
     # methods
     def init(self, name):
         self.name = name
-        
+
     def format(self):
         return {
             'id': self.id,
@@ -55,13 +57,14 @@ class Service(db.Model):
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
         db.session.commit()
-        
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+
 
 class Photographer(db.Model):
     __tablename__ = 'photographers'
@@ -87,7 +90,7 @@ class Photographer(db.Model):
     def __init__(self, name, email):
         self.name = name
         self.email = email
-    
+
     def overview(self):
         return {
             'id': self.id,
@@ -97,7 +100,7 @@ class Photographer(db.Model):
             'services': self.services,
             'profile_photo': self.profile_photo,
         }
-        
+
     def details(self):
         return {
             'id': self.id,
@@ -111,14 +114,14 @@ class Photographer(db.Model):
             'social_media': self.social_media,
             'bio': self.bio
         }
-     
+
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
         db.session.commit()
-    
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
@@ -135,24 +138,24 @@ class Photo(db.Model):
     # relationships
     photographer = db.relationship('Photographer', back_populates='photos')
     service = db.relationship('Service', back_populates='photos')
-    
+
     # methods
     def __init__(self, photographer_id, service_id, image_path):
         self.photographer_id = photographer_id
         self.service_id = service_id
         self.image_path = image_path
- 
+
     def format(self):
         return {
             'photographer_id': self.photographer_id,
             'service_id': self.service_id,
             'image_path': self.image_path,
         }
-    
+
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
@@ -182,14 +185,14 @@ class Price(db.Model):
             'service_id': self.service_id,
             'price': self.price,
         }
-    
+
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
         db.session.commit()
-    
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
