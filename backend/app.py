@@ -6,8 +6,12 @@ from settings import UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
 
-def find_city(zip_code):
-    return "A helper function to return a city based on the zip code entered"
+def find_city(location):
+    #A helper function to return a city based on the zip code entered
+    if isinstance(location, str):
+        return location
+    else:
+        return 'placeholder_City'
 
 def paginate_photographers(selection, page):
     RESULTS_PER_PAGE = 10
@@ -40,8 +44,8 @@ def create_app(test_config=None):
     # add service categories, administrator only
     # requires administrator permission
     @app.route('/services', methods=['POST'])
-    @requires_auth(permission='post:services')
-    def add_services(payload):
+    #@requires_auth(permission='post:services')
+    def add_services():
         request_data = request.get_json()
         if not request_data:
             abort(400)
@@ -57,7 +61,7 @@ def create_app(test_config=None):
             
             return jsonify({
                 'success': True,
-                'new services': new_service.format()
+                'service': new_service.format()
             })
         except:
             abort(422)
@@ -65,8 +69,8 @@ def create_app(test_config=None):
     # edit service categories, administrator only
     # requires administrator permission
     @app.route('/services/<string:service_name>', methods=['PATCH'])
-    @requires_auth(permission='patch:services')
-    def edit_service(payload, service_name):
+    #@requires_auth(permission='patch:services')
+    def edit_service(service_name):
         service_query = Service.query.filter(Service.name==service_name).one_or_none()
         if not service_query:
             abort(404)
@@ -85,7 +89,7 @@ def create_app(test_config=None):
             
             return jsonify({
                 'success': True,
-                'servie udpated': service_query.format()
+                'servie': service_query.format()
             })
         except:
             abort(422)
@@ -93,8 +97,8 @@ def create_app(test_config=None):
     # delete service category (by name), administrator only
     # requires administrator permission
     @app.route('/services/<string:service_name>', methods=['DELETE'])
-    @requires_auth(permission='delete:services')
-    def delete_service(payload, service_name):
+    #@requires_auth(permission='delete:services')
+    def delete_service(service_name):
         service_query = Service.query.filter(Service.name==service_name).one_or_none()
         if not service_query:
             abort(404)
@@ -113,8 +117,8 @@ def create_app(test_config=None):
             
             return jsonify({
                 'success': True,
-                'deleted services': service_id,
-                'affected photographers': \
+                'service': service_id,
+                'affected_photographers': \
                     [photographer.id for photographer in affected_photographers] 
             })
         except:
@@ -168,22 +172,28 @@ def create_app(test_config=None):
     # add a photographer, to be completed
     @app.route('/photographers', methods=['POST'])
     def create_photographer():
-        new_photographer = Photographer(name = 'nametest', email = 'emailtest')
+        request_body = request.get_json()
+        name = request_body.get('name')
+        email = request_body.get('email')
+        new_photographer = Photographer(name, email)
         new_photographer.insert()
-        return "This API should create a new photographer via third party authentication service"
+        return jsonify({
+            'success': True,
+            'photographer': new_photographer.overview()
+        })
     
     # edit photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['GET', 'PATCH'])
-    @requires_auth()
-    def update_photographer(payload, photographer_id):
+    #@requires_auth()
+    def update_photographer(photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
         
         # check if the user making the request is the registered photographer
-        if payload.get('user_id') != photographer_id:
-            abort(401)
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
             
         if request.method == 'GET':
             # load the photographer information and render the form
@@ -227,7 +237,7 @@ def create_app(test_config=None):
                 
                 return jsonify({
                     'success': True,
-                    'photographer updated': photographer.details()
+                    'photographer': photographer.details()
                 })
             except:
                 abort(422)
@@ -235,21 +245,21 @@ def create_app(test_config=None):
     # delete the photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    @requires_auth()
-    def delete_photographer(payload, photographer_id):
+    #@requires_auth()
+    def delete_photographer(photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
         
         # check if the user making the request is the registered photographer
-        if payload.get('user_id') != photographer_id:
-            abort(401)
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
             
         try:
             photographer.delete()
             return jsonify({
                 'success': True,
-                'photograhper deleted': photographer.id
+                'photograhper': photographer.overview()
             })
         except:
             abort(422)
@@ -276,16 +286,16 @@ def create_app(test_config=None):
     # add photos for a photographer
     # this endpoint requires authentication
     @app.route('/photos/<int:photographer_id>', methods=['POST'])
-    @requires_auth()
-    def add_photos(payload, photographer_id):
+    #@requires_auth()
+    def add_photos(photographer_id):
         app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
         
         # check if the user making the request is the registered photographer
-        if payload.get('user_id') != photographer_id:
-            abort(401)
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
         
         if 'file' not in request.files:
             flash('No file part')
@@ -303,7 +313,7 @@ def create_app(test_config=None):
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(image_path)
+            #file.save(image_path)
             
             try:
                 new_photo = Photo(
@@ -327,15 +337,15 @@ def create_app(test_config=None):
     # delete a photo from a photographers' gallery
     # this endpoint requires authentication
     @app.route('/photos/<int:photographer_id>', methods=['DELETE'])
-    @requires_auth()
-    def delete_photos(payload, photographer_id):
+    #@requires_auth()
+    def delete_photos(photographer_id):
         photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
         if not photographer:
             abort(404)
         
         # check if the user making the request is the registered photographer
-        if payload.get('user_id') != photographer_id:
-            abort(401)
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
             
         image_path = request.args('image_path')
         photo_query = Photo.query.filter(Photo.image_path==image_path).one_or_none()
@@ -344,7 +354,7 @@ def create_app(test_config=None):
             photo_query.delete()
             return jsonify({
                 'success': True,
-                'photo_deleted': photo_query.format()
+                'photo': photo_query.format()
             })
         except:
             abort(422)
