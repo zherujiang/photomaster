@@ -6,12 +6,14 @@ from settings import UPLOAD_FOLDER, ALLOWED_EXTENSIONS, DB_PATH
 from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
 
+
 def find_city(location):
-    #A helper function to return a city based on the zip code entered
+    # A helper function to return a city based on the zip code entered
     if isinstance(location, str):
         return location
     else:
         return 'placeholder_City'
+
 
 def paginate_photographers(selection, page):
     RESULTS_PER_PAGE = 10
@@ -21,16 +23,18 @@ def paginate_photographers(selection, page):
     current_photographers = photographers[start:end]
     return current_photographers
 
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.split('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def create_app(database_path):
 
     app = Flask(__name__)
     setup_db(app, database_path)
     CORS(app)
-    
+
     @app.route('/services')
     def get_services():
         services_query = Service.query.order_by(Service.id).all()
@@ -39,26 +43,26 @@ def create_app(database_path):
             'success': True,
             'services': services
         })
-    
+
     # add service categories, administrator only
     # requires administrator permission
     @app.route('/services', methods=['POST'])
-    #@requires_auth(permission='post:services')
+    # @requires_auth(permission='post:services')
     def add_services():
         request_data = request.get_json()
         if not request_data:
             abort(400)
         service_name = request_data.get('name')
         service_image = request_data.get('image_link')
-        
+
         try:
-            new_service = Service(name = service_name)
-            print("service being added: ", new_service.format())
+            new_service = Service(name=service_name)
+            # print("service being added: ", new_service.format())
             new_service.insert()
             if service_image:
                 new_service.image_link = service_image
                 new_service.update()
-            
+
             return jsonify({
                 'success': True,
                 'service': new_service.format()
@@ -66,62 +70,64 @@ def create_app(database_path):
         except Exception as e:
             print(e)
             abort(422)
-    
+
     # edit service categories, administrator only
     # requires administrator permission
     @app.route('/services/<int:service_id>', methods=['PATCH'])
-    #@requires_auth(permission='patch:services')
+    # @requires_auth(permission='patch:services')
     def edit_service(service_id):
-        service_query = Service.query.filter(Service.id==service_id).one_or_none()
+        service_query = Service.query.filter(
+            Service.id == service_id).one_or_none()
         if not service_query:
             abort(404)
-        
+
         request_data = request.get_json()
         if not request_data:
             abort(400)
-        
+
         try:
             service_query.name = request_data.get('name')
             service_query.image_link = request_data.get('image_link')
             service_query.update()
-            
+
             return jsonify({
                 'success': True,
                 'service': service_query.format()
             })
         except:
             abort(422)
-    
+
     # delete service category (by name), administrator only
     # requires administrator permission
     @app.route('/services/<int:service_id>', methods=['DELETE'])
-    #@requires_auth(permission='delete:services')
+    # @requires_auth(permission='delete:services')
     def delete_service(service_id):
-        service_query = Service.query.filter(Service.id==service_id).one_or_none()
+        service_query = Service.query.filter(
+            Service.id == service_id).one_or_none()
         if not service_query:
             abort(404)
-        
+
         deleted_service = service_query.format()
         affected_photographers = Photographer.query.\
             filter(Photographer.services.any(service_id)).all()
-        
+
         try:
             # delete the service from photographers that provide this service
             for photographer in affected_photographers:
                 photographer.services.remove(service_id)
-                
-            # delete the service category, related photos and prices will be auto-deleted    
+
+            # delete the service category, related photos and prices will be auto-deleted
             service_query.delete()
-            
+
             return jsonify({
                 'success': True,
                 'service': deleted_service,
-                'affected_photographers': \
-                    [photographer.id for photographer in affected_photographers] 
+                'affected_photographers':
+                    [photographer.id for photographer in affected_photographers]
             })
         except Exception as e:
             abort(422)
-    
+
     # search photographers
     @app.route('/photographers')
     def search_photographers():
@@ -133,17 +139,19 @@ def create_app(database_path):
             try:
                 photographer_query = Photographer.query.\
                     filter(Photographer.services.any(service_id)).\
-                    filter(Photographer.city==city).order_by(Photographer.name).all()
+                    filter(Photographer.city == city).order_by(
+                        Photographer.name).all()
             except:
                 abort(422)
-            
-            # paginate search results and return short information    
-            photographers = paginate_photographers(photographer_query, current_page)
+
+            # paginate search results and return short information
+            photographers = paginate_photographers(
+                photographer_query, current_page)
             return jsonify({
                 'success': True,
                 'photographers': photographers
             })
-            
+
         elif city == None:
             return jsonify({
                 'success': False,
@@ -151,14 +159,14 @@ def create_app(database_path):
                 'error': 400
             })
         else:
-            abort(400)        
+            abort(400)
 
     # get details of a photographer
     @app.route('/photographer-details/<int:photographer_id>')
     def view_photographer_details(photographer_id):
         photographer_query = Photographer.query.\
-            filter(Photographer.id==photographer_id).one_or_none()
-        
+            filter(Photographer.id == photographer_id).one_or_none()
+
         if not photographer_query:
             abort(404)
         else:
@@ -179,28 +187,30 @@ def create_app(database_path):
             'success': True,
             'photographer': new_photographer.overview()
         })
-    
+
     # edit photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['GET', 'PATCH'])
-    #@requires_auth()
+    # @requires_auth()
     def update_photographer(photographer_id):
-        photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
         if not photographer:
             abort(404)
-        
+
         # check if the user making the request is the registered photographer
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
-            
+
         if request.method == 'GET':
             # load the photographer information and render the form
-            photos_query = Photo.query.filter(Photo.photographer_id==photographer_id).all()
-            prices_query = Price.query.filter(Price.photographer_id==photographer_id).\
+            photos_query = Photo.query.filter(
+                Photo.photographer_id == photographer_id).all()
+            prices_query = Price.query.filter(Price.photographer_id == photographer_id).\
                 order_by(Price.service_id).all()
             photos = [photo.format() for photo in photos_query]
             prices = [price.format() for price in prices_query]
-            
+
             return jsonify({
                 'success': True,
                 'photographer': photographer.details(),
@@ -218,9 +228,9 @@ def create_app(database_path):
                 portfolio_link = request_body.get('portfolio_link')
                 social_media = request_body.get('social_media')
                 bio = request_body.get('bio')
-                
+
                 # todo: add price for selected services
-                
+
                 # update photographer with submitted information
                 photographer.city = city
                 photographer.services = services
@@ -229,31 +239,32 @@ def create_app(database_path):
                 photographer.portfolio_link = portfolio_link
                 photographer.social_media = social_media
                 photographer.bio = bio
-                
+
                 photographer.update()
-                
+
                 return jsonify({
                     'success': True,
                     'photographer': photographer.details()
                 })
             except:
                 abort(422)
-        
+
     # delete the photographer
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    #@requires_auth()
+    # @requires_auth()
     def delete_photographer(photographer_id):
-        photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
         if not photographer:
             abort(404)
-        
+
         # check if the user making the request is the registered photographer
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
-        
+
         deleted_photographer = photographer.overview()
-            
+
         try:
             photographer.delete()
             return jsonify({
@@ -265,10 +276,11 @@ def create_app(database_path):
 
     @app.route('/photographers/<int:photographer_id>/photos')
     def get_photos(photographer_id):
-        photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
         if not photographer:
             abort(404)
-        
+
         if photographer.photos:
             photos = [photo.format() for photo in photographer.photos]
         else:
@@ -279,89 +291,93 @@ def create_app(database_path):
             'photos': photos
         })
 
-
     # upload photo
     # this endpoint requires authentication
-    @app.route('/photos/<int:photographer_id>', methods=['GET','POST'])
+    @app.route('/photos/<int:photographer_id>', methods=['GET', 'POST'])
     def upload_photos(photographer_id):
         app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-        photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
         if not photographer:
             abort(404)
 
         # check if the user making the request is the registered photographer
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
-        
+
         if request.method == 'GET':
             return redirect('upload_form.html')
-        
-        else:            
+
+        else:
             if 'file' not in request.files:
                 flash('No file part')
                 return redirect(request.url)
-            
+
             file = request.files['file']
-            
+
             if file.filename == '':
                 flash('No selected file')
                 return redirect(request.url)
 
             service_tag = request.form.get('service_tag')
-            service_id = Service.query.filter(Service.name==service_tag).one_or_none().id
-            
+            service_id = Service.query.filter(
+                Service.name == service_tag).one_or_none().id
+
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                image_path = os.path.join(
+                    app.config['UPLOAD_FOLDER'], filename)
                 file.save(image_path)
-                
+
                 try:
                     new_photo = Photo(
                         photographer_id,
                         service_id,
                         image_path
-                        )
+                    )
                     new_photo.insert()
-                
+
                     return jsonify({
                         'success': True,
                         'image': new_photo.format()
                     })
                 except:
                     abort(422)
-            
+
             elif not allowed_file(file.filename):
                 flash('File name not allowed')
                 return redirect(request.url)
-        
+
     # delete a photo from a photographers' gallery
     # this endpoint requires authentication
     @app.route('/photographers/<int:photographer_id>/photos', methods=['DELETE'])
-    #@requires_auth()
+    # @requires_auth()
     def delete_photos(photographer_id):
-        photographer = Photographer.query.filter(Photographer.id==photographer_id).one_or_none()
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
         if not photographer:
             abort(404)
-        
+
         # check if the user making the request is the registered photographer
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
-            
-        image_path = request.args('image_path')
-        photo_query = Photo.query.filter(Photo.image_path==image_path).one_or_none()
-        
+
+        image_path = request.args.get('image_path')
+        photo_query = Photo.query.filter(
+            Photo.image_path == image_path).one_or_none()
+
         try:
+            deleted_photo = photo_query.format()
             photo_query.delete()
             return jsonify({
                 'success': True,
-                'photo': photo_query.format()
+                'photo': deleted_photo
             })
         except:
             abort(422)
-    
-    
+
     # error handling
-    
+
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({
@@ -369,7 +385,7 @@ def create_app(database_path):
             'error': 400,
             'message': 'bad request'
         }), 400
-    
+
     @app.errorhandler(401)
     def unauthorized(error):
         return jsonify({
@@ -377,7 +393,7 @@ def create_app(database_path):
             'error': 401,
             'message': 'unauthorized user'
         }), 401
-    
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -385,7 +401,7 @@ def create_app(database_path):
             'error': 404,
             'message': 'resource not found'
         }), 404
-    
+
     @app.errorhandler(405)
     def method_not_allowed(error):
         return jsonify({
@@ -393,7 +409,7 @@ def create_app(database_path):
             'message': 'method not allowed',
             'error': 405
         }), 405
-    
+
     @app.errorhandler(422)
     def unprocessable(error):
         return jsonify({
@@ -401,7 +417,7 @@ def create_app(database_path):
             'error': 422,
             'message': 'unprocessable'
         }), 422
-    
+
     @app.errorhandler(500)
     def server_error(error):
         return jsonify({
@@ -409,7 +425,7 @@ def create_app(database_path):
             'error': 500,
             'message': 'internal server error'
         }), 500
-    
+
     @app.errorhandler(AuthError)
     def authentication_error(error):
         return jsonify({
@@ -417,7 +433,7 @@ def create_app(database_path):
             'error': error.status_code,
             'message': error.error
         }), error.status_code
-        
+
     return app
 
 

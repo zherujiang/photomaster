@@ -3,7 +3,8 @@ import json
 from app import create_app
 from settings import DB_TEST_NAME, DB_USER, DB_TEST_PATH
 import os
-from sqlalchemy import text
+from sqlalchemy import text, inspect
+
 
 class PhotomasterTestCase(unittest.TestCase):
 
@@ -15,8 +16,9 @@ class PhotomasterTestCase(unittest.TestCase):
 
         with self.app.app_context():
             # get table schema from the models.py
-            tables = self.db.engine.table_names()
-            
+            tables = inspect(self.db.engine).get_table_names()
+            seqs = inspect(self.db.engine).get_sequence_names()
+
             test_data_dir = os.path.join(os.path.dirname(
                 os.path.realpath(__file__)), "test_data")
 
@@ -24,16 +26,22 @@ class PhotomasterTestCase(unittest.TestCase):
                 # with connection.begin():
                 for table in tables:
                     csv_filename = os.path.join(test_data_dir, f"{table}.csv")
-                    sql_command = text(f"COPY {table} FROM '{csv_filename}' DELIMITER ';' CSV HEADER")
+                    sql_command = text(
+                        f"COPY {table} FROM '{csv_filename}' DELIMITER ';' CSV HEADER")
                     connection.execute(sql_command)
-            
+
+                for seq in seqs:
+                    connection.execute(
+                        f"ALTER SEQUENCE {seq} RESTART WITH 1000;")
+
     def tearDown(self):
         with self.app.app_context():
-            tables = self.db.engine.table_names()
-            psql_cmd = f"psql -U {DB_USER} -c \"\c {self.database_name}\""
-            for table in tables:
-                psql_cmd += f" -c \"DELETE FROM {table}\""
-            os.system(psql_cmd)
+            tables = inspect(self.db.engine).get_table_names()
+
+            with self.db.engine.begin() as connection:
+                for table in tables:
+                    sql_command = text(f"DELETE FROM {table}")
+                    connection.execute(sql_command)
 
     def test_get_services(self):
         res = self.client().get("/services")
@@ -145,13 +153,13 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertEqual(data["success"], True)
         self.assertEqual(data["photographer"]["id"], 10)
 
-    # def test_get_photos(self):
-    #     res = self.client().get("/photographers/2/photos")
-    #     data = json.loads(res.data)
+    def test_get_photos(self):
+        res = self.client().get("/photographers/2/photos")
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertTrue(len(data["photos"]))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(len(data["photos"]))
 
     # def test_upload_photos(self):
     #     res = self.client().post("/photos/2", json={
@@ -165,16 +173,18 @@ class PhotomasterTestCase(unittest.TestCase):
     #     self.assertEqual(data["success"], True)
     #     self.assertEqual(data["image"]["photographer_id"], 2)
 
-    # def test_404_get_photos_of_nonexisting_photographer(self):
-    #     res = self.client().get("/photographers/2146764871541/photos")
-    #     data = json.loads(res.data)
+    def test_404_get_photos_of_nonexisting_photographer(self):
+        res = self.client().get("/photographers/2146764871541/photos")
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 404)
-    #     self.assertEqual(data["success"], False)
-    #     self.assertEqual(data["message"], "resource not found")
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "resource not found")
 
     # def test_delete_photos(self):
-    #     res = self.client().delete("/photos/2/image_path")
+    #     res = self.client().delete("/photographers/2/photos", json={
+    #         "image_path": "wedding photo photographer2"
+    #     })
     #     data = json.loads(res.data)
 
     #     self.assertEqual(res.status_code, 200)
