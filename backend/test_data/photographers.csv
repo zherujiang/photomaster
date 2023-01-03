@@ -1,0 +1,11 @@
+id;name;email;city;services;profile_photo;addres;portfolio_link;social_media;bio
+1;lunuo;lunuo13@gmail.com;Seattle;"{1,2,3}";;;https://www.lunuozhouphotography.com;ins,xhs;
+2;kaka;heykaka@gmail.com;San Francisco;"{2,3,5}";;;;ins,xhs;Kaka, Fashion Photographer. Available in Portland and Bay Area.
+3;renran;renran@gmail.com;Seattle;"{2,3,4}";;;;xhs;Hi, I'm Renran, a professional portrait photographer and previously journalist at Xinhua News Agency.
+4;siqi;siqi@gmail.com;Seattle;"{2}";;;;xhs;Available dates in 2023: Jan - Feburary, May = October
+5;Allen;allencao@gmail.com;Seattle;"{2,3,4}";;;;ins,xhs;Open for jobs in Feburary - April, 2023
+6;Chenzhe;czny1994@gmail.com;New York;"{3,5}";;;;ins,xhs;Photographer in New York and Los Angeles
+7;Chace;chace@gmail.com;New York;"{2,3,4}";;;;xhs;Available in Boston, New York, Toronto and Montreal
+8;Mayxiaozhou;mayxz@gmail.com;New York;"{2,3,4,5}";;;;xhs;Photographer from Guang Zhou, 90s, currently in New York
+9;Loya;loya@gmail.com;Log Angeles;"{2,3,4}";;;;xhs;Weddings, family and pregancy photos, located in Bay Area.
+10;Ava;ava@gmail.com;Los Angeles;"{4}";;San Jose Studio;;xhs;Photography for new-borns, family and pregnancy.

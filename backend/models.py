@@ -2,20 +2,10 @@ import os
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
 import json
-from settings import DB_NAME, DB_USER, DB_PASSWORD
-
-# compose database_path
-db_user_credentials = DB_USER + ":" + DB_PASSWORD
-if DB_USER or DB_PASSWORD:
-    database_path = 'postgresql://{}@{}/{}'.format(
-        db_user_credentials, 'localhost:5432', DB_NAME)
-else:
-    database_path = 'postgresql://{}/{}'.format('localhost:5432', DB_NAME)
 
 db = SQLAlchemy()
 
-
-def setup_db(app, database_path=database_path):
+def setup_db(app, database_path):
     '''
     setup_db(app)
         binds a flask application and a SQLAlchemy service
@@ -26,9 +16,7 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     with app.app_context():
         db.create_all()
-
-    return db
-
+        
 
 class Service(db.Model):
     __tablename__ = 'services'
@@ -38,8 +26,6 @@ class Service(db.Model):
     image_link = Column(String(255))
 
     # relationships
-    photos = db.relationship(
-        'Photo', back_populates='service', cascade='all, delete')
     prices = db.relationship(
         'Price', back_populates='service', cascade='all, delete')
 
@@ -129,26 +115,22 @@ class Photographer(db.Model):
 
 class Photo(db.Model):
     __tablename__ = 'photos'
+    id = Column(Integer, primary_key=True)
     photographer_id = Column(db.ForeignKey(
         'photographers.id', ondelete='CASCADE'), primary_key=True)
-    service_id = Column(db.ForeignKey(
-        'services.id', ondelete='CASCADE'), primary_key=True)
     image_path = Column(String(255), nullable=False)
 
     # relationships
     photographer = db.relationship('Photographer', back_populates='photos')
-    service = db.relationship('Service', back_populates='photos')
 
     # methods
-    def __init__(self, photographer_id, service_id, image_path):
+    def __init__(self, photographer_id, image_path):
         self.photographer_id = photographer_id
-        self.service_id = service_id
         self.image_path = image_path
 
     def format(self):
         return {
             'photographer_id': self.photographer_id,
-            'service_id': self.service_id,
             'image_path': self.image_path,
         }
 
