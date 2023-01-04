@@ -15,7 +15,7 @@ class PhotomasterTestCase(unittest.TestCase):
         self.database_name = DB_TEST_NAME
 
         with self.app.app_context():
-            # get table schema from the models.py
+            # get table names from the models.py
             tables = inspect(self.db.engine).get_table_names()
             seqs = inspect(self.db.engine).get_sequence_names()
 
@@ -23,7 +23,6 @@ class PhotomasterTestCase(unittest.TestCase):
                 os.path.realpath(__file__)), "test_data")
 
             with self.db.engine.begin() as connection:
-                # with connection.begin():
                 for table in tables:
                     csv_filename = os.path.join(test_data_dir, f"{table}.csv")
                     sql_command = text(
@@ -125,7 +124,7 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertTrue("photos" in data)
         self.assertTrue("prices" in data)
 
-    def test_patch_update_photographer(self):
+    def test_update_photographer(self):
         res = self.client().patch("/photographers/1", json={
             "city": "San Francisco",
             "services": [1, 2],
@@ -142,9 +141,23 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertFalse(data["photographer"]["portfolio_link"])
         self.assertEqual(data["photographer"]
                          ["bio"], "I am Lunuo, a photographer.")
-        # self.assertTrue(len(data["photos"]))
+        self.assertTrue(len(data["photos"]))
         # self.assertTrue(len(data["prices"]))
+    
+    def test_404_update_nonexisting_photographer(self):
+        res = self.client().patch("/photographers/256977", json={
+            "city": "San Francisco",
+            "services": [1, 2],
+            "profile_photo": "lunuo.jpg",
+            "portfolio_link": "",
+            "bio": "I am Lunuo, a photographer.",
+        })
+        data = json.loads(res.data)
 
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "resource not found")
+        
     def test_delete_photographer(self):
         res = self.client().delete("/photographers/10")
         data = json.loads(res.data)
@@ -152,6 +165,14 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
         self.assertEqual(data["photographer"]["id"], 10)
+    
+    def test_404_delete_nonexisting_photographer(self):
+        res = self.client().delete("/photographers/404321")
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "resource not found")
 
     def test_get_photos(self):
         res = self.client().get("/photographers/2/photos")
@@ -161,17 +182,17 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertEqual(data["success"], True)
         self.assertTrue(len(data["photos"]))
 
-    # def test_upload_photos(self):
-    #     res = self.client().post("/photos/2", json={
-    #         "file": {
-    #             "filename": "test.jpg"
-    #         }
-    #     })
-    #     data = json.loads(res.data)
+    def test_upload_photos(self):
+        res = self.client().post("/photos/2", json={
+            "file": {
+                "filename": "test.jpg"
+            }
+        })
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertEqual(data["image"]["photographer_id"], 2)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertEqual(data["photo"]["photographer_id"], 2)
 
     def test_404_get_photos_of_nonexisting_photographer(self):
         res = self.client().get("/photographers/2146764871541/photos")
@@ -181,15 +202,13 @@ class PhotomasterTestCase(unittest.TestCase):
         self.assertEqual(data["success"], False)
         self.assertEqual(data["message"], "resource not found")
 
-    # def test_delete_photos(self):
-    #     res = self.client().delete("/photographers/2/photos", json={
-    #         "image_path": "wedding photo photographer2"
-    #     })
-    #     data = json.loads(res.data)
+    def test_delete_photos(self):
+        res = self.client().delete("/photographers/2/photos?filename=wedding photo photographer2")
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertEqual(data["photo"]["photographer_id"], 2)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertEqual(data["photo"]["photographer_id"], 2)
 
 
 if __name__ == "__main__":

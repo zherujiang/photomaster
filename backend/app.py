@@ -57,7 +57,6 @@ def create_app(database_path):
 
         try:
             new_service = Service(name=service_name)
-            # print("service being added: ", new_service.format())
             new_service.insert()
             if service_image:
                 new_service.image_link = service_image
@@ -228,7 +227,8 @@ def create_app(database_path):
                 portfolio_link = request_body.get('portfolio_link')
                 social_media = request_body.get('social_media')
                 bio = request_body.get('bio')
-
+                photos_query = photographer.photos
+                photos = [photo.format() for photo in photos_query]
                 # todo: add price for selected services
 
                 # update photographer with submitted information
@@ -244,7 +244,8 @@ def create_app(database_path):
 
                 return jsonify({
                     'success': True,
-                    'photographer': photographer.details()
+                    'photographer': photographer.details(),
+                    'photos': photos,
                 })
             except:
                 abort(422)
@@ -307,46 +308,67 @@ def create_app(database_path):
 
         if request.method == 'GET':
             return redirect('upload_form.html')
-
+        
+        # testing code to test database insersion
         else:
-            if 'file' not in request.files:
-                flash('No file part')
-                return redirect(request.url)
-
-            file = request.files['file']
-
-            if file.filename == '':
-                flash('No selected file')
-                return redirect(request.url)
-
-            service_tag = request.form.get('service_tag')
-            service_id = Service.query.filter(
-                Service.name == service_tag).one_or_none().id
-
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                image_path = os.path.join(
-                    app.config['UPLOAD_FOLDER'], filename)
-                file.save(image_path)
-
+            data = request.get_json()
+            file = data.get('file')
+            filename = file['filename']
+            
+            if file and filename:
                 try:
                     new_photo = Photo(
                         photographer_id,
-                        service_id,
-                        image_path
+                        filename
                     )
                     new_photo.insert()
-
+                    
                     return jsonify({
                         'success': True,
-                        'image': new_photo.format()
+                        'photo': new_photo.format()
                     })
-                except:
+                    
+                except Exception as e:
+                    print(e)
                     abort(422)
+            else:
+                abort(400)
+                
+        # else:
+        #     if 'file' not in request.files:
+        #         flash('No file part')
+        #         return redirect(request.url)
 
-            elif not allowed_file(file.filename):
-                flash('File name not allowed')
-                return redirect(request.url)
+        #     file = request.files['file']
+
+        #     if file.filename == '':
+        #         flash('No selected file')
+        #         return redirect(request.url)
+
+        #     if file and allowed_file(file.filename):
+        #         filename = secure_filename(file.filename)
+        #         image_path = os.path.join(
+        #             app.config['UPLOAD_FOLDER'], filename)
+        #         file.save(image_path)
+
+        #         try:
+        #             new_photo = Photo(
+        #                 photographer_id,
+        #                 image_path
+        #             )
+        #             new_photo.insert()
+
+        #             return jsonify({
+        #                 'success': True,
+        #                 'photo': new_photo.format()
+        #             })
+        #         except:
+        #             abort(422)
+
+        #     elif not allowed_file(file.filename):
+        #         flash('File name not allowed')
+        #         return redirect(request.url)
+
 
     # delete a photo from a photographers' gallery
     # this endpoint requires authentication
@@ -362,20 +384,23 @@ def create_app(database_path):
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
 
-        image_path = request.args.get('image_path')
+        filename = request.args.get('filename')
         photo_query = Photo.query.filter(
-            Photo.image_path == image_path).one_or_none()
-
-        try:
-            deleted_photo = photo_query.format()
-            photo_query.delete()
-            return jsonify({
-                'success': True,
-                'photo': deleted_photo
-            })
-        except:
-            abort(422)
-
+            Photo.filename == filename).one_or_none()
+        if photo_query:
+            try:
+                deleted_photo = photo_query.format()
+                photo_query.delete()
+                return jsonify({
+                    'success': True,
+                    'photo': deleted_photo
+                })
+            except Exception as e:
+                print(e)
+                abort(422)
+        else:
+            abort(404)
+            
     # error handling
 
     @app.errorhandler(400)
