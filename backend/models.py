@@ -130,6 +130,7 @@ class Photo(db.Model):
 
     def format(self):
         return {
+            'id': self.id,
             'photographer_id': self.photographer_id,
             'filename': self.filename,
         }

@@ -15,12 +15,10 @@ def find_city(location):
         return 'placeholder_City'
 
 
-def paginate_photographers(selection, page):
-    RESULTS_PER_PAGE = 10
-    photographers = [photographer.overview() for photographer in selection]
-    start = RESULTS_PER_PAGE * (int(page) - 1) + 1
-    end = start + RESULTS_PER_PAGE
-    current_photographers = photographers[start:end]
+def paginate_search_results(selection, results_per_page, current_page):
+    start = int(results_per_page) * (int(current_page) - 1)
+    end = start + int(results_per_page)
+    current_photographers = selection[start:end]
     return current_photographers
 
 
@@ -133,7 +131,9 @@ def create_app(database_path):
         service_id = request.args.get('service')
         location = request.args.get('location')
         city = find_city(location)
-        current_page = request.args.get('page')
+        results_per_page = request.args.get('results_per_page')
+        current_page = request.args.get('current_page')
+        
         if service_id and city:
             try:
                 photographer_query = Photographer.query.\
@@ -143,11 +143,21 @@ def create_app(database_path):
             except:
                 abort(422)
 
-            # paginate search results and return short information
-            photographers = paginate_photographers(
-                photographer_query, current_page)
+            search_results = []
+            
+            for photographer in photographer_query:
+                photo_preview = photographer.photos[:8]
+                photos = [photo.format() for photo in photo_preview]
+                photographer_info = photographer.overview()
+                photographer_info['photos'] = photos
+                search_results.append(photographer_info)
+                
+            # paginate search results and return
+            photographers = paginate_search_results(search_results, results_per_page, current_page)
+            
             return jsonify({
                 'success': True,
+                'total_photographers': len(search_results),
                 'photographers': photographers
             })
 

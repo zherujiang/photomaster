@@ -1,23 +1,23 @@
 id;photographer_id;filename
-1;1;headshot from photographer1
-2;1;wedding photo photographer1
-3;1;portrait photographer1
-4;2;wedding photo photographer2
-5;2;portrait photo photographer2
-6;2;fashion photo photographer2
-7;3;wedding photo photographer3
-8;4;wedding photo photographer4
-9;5;wedding photo photographer5
-10;5;family photo photographer5
-11;6;portrait photo photographer6
-12;6;portrait photo photographer6
-13;7;wedding photo photographer7
-14;7;portrait photo photographer7
-15;7;family photo photographer7
-16;8;portrait photo photographer8
-17;8;family photo photographer8
-18;8;fashion photo photographer8
-19;9;portrait photo photographer9
-20;9;family photo photographer9
-21;10;family photo photographer10
-22;10;family photo photographer10
+1;1;headshot.jpg
+2;1;wedding.jpg
+3;1;portrait.jpg
+4;2;wedding.jpg
+5;2;portrait.jpg
+6;2;fashion.jpg
+7;3;family.jpg
+8;4;wedding.jpg
+9;5;wedding.jpg
+10;5;family.jpg
+11;6;portrait.jpg
+12;6;fashion.jpg
+13;7;wedding.jpg
+14;7;portrait.jpg
+15;7;family.jpg
+16;8;portrait.jpg
+17;8;family.jpg
+18;8;fashion.jpg
+19;9;portrait.jpg
+20;9;family.jpg
+21;10;family.jpg
+22;10;portrait.jpg

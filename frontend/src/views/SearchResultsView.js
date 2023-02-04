@@ -1,147 +1,222 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PhotographerList from '../components/PhotographerList';
 import axios from "axios";
 
-class SearchResultsView extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            services: [],
-            selectedService: 2,
-            location: null,
-            totalPhotographers: 0,
-            page: 1,
-            photographers: [],
-            maxPrice: 1000
-        }
-    }
+function SearchResultsView(props) {
+    const [services, setServices] = useState([]);
+    const [selectedService, setSelectedService] = useState(1);
+    const [selectedCity, setSelectedCity] = useState('Seattle');
+    const [totalPhotographers, setTotalPhotographers] = useState(0);
+    const [photographers, setPhotographers] = useState([]);
+    const [maxPrice, setMaxPrice] = useState(1000);
+    const [resultsPerPage, setResultsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    navTo(uri) {
-        window.location.href = window.location.origin + uri;
-    }
+    const location = useLocation();
 
-    componentDidMount() {
-        this.getServices();
-    }
-
-    getServices = () => {
+    function getServices() {
         axios.get('/services')
             .then(response => {
                 const data = response.data;
-                this.setState({
-                    services: data['services'],
-                })
+                setServices(data['services']);
             })
             .catch(function (error) {
                 console.log(error);
             })
     }
 
-    handleServiceChange = (event) => {
-        this.setState({
-            selectedService: event.target.value
-        })
+    function handleServiceChange(event) {
+        setSelectedService(event.target.value);
     }
 
-    handleLocationChange = (event) => {
-        this.setState({
-            location: event.target.value
-        })
+    function handleCityChange(event) {
+        setSelectedCity(event.target.value);
     }
 
-    handlePriceChange = (event) => {
-        this.setState({
-            maxPrice: event.target.value
-        })
+    function handlePriceChange(event) {
+        setMaxPrice(event.target.value);
     }
 
-    findPhotographers = () => {
-        console.log(this.state.selectedService);
-        console.log(this.state.location);
+    function handleResultsPerPageChange(event) {
+        setResultsPerPage(event.target.value);
+        setCurrentPage(1);
+    }
+
+    function handleSelectPage(event) {
+        setCurrentPage(parseInt(event.target.innerHTML));
+    }
+
+    function handlePreviousPage(event) {
+        setCurrentPage(currentPage - 1);
+    }
+
+    function handleNextPage(event) {
+        setCurrentPage(currentPage + 1);
+    }
+
+    function findPhotographers() {
         axios.get('/photographers', {
             params: {
-                service: this.state.selectedService,
-                location: this.state.location,
-                page: this.state.page
+                service: selectedService,
+                location: selectedCity,
+                results_per_page: resultsPerPage,
+                current_page: currentPage
             }
         })
             .then(response => {
                 const data = response.data;
-                console.log(data);
-                this.setState({
-                    photographers: data['photographers'],
-                    totalPhotographers: data['photographers'].length
-                })
+                setTotalPhotographers(data['total_photographers']);
+                setPhotographers(data['photographers']);
             })
             .catch(function (error) {
                 console.log(error);
             })
     }
 
-    render() {
+    function Pagination(props) {
+        if (totalPhotographers == 0) {
+            return null
+        };
+
+        const pages = [];
+        const totalPages = Math.ceil(totalPhotographers / resultsPerPage);
+
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(
+                <li key={i} className={`page-item ${currentPage == i ? 'active' : ''}`}>
+                    <a className='page-link' href='#' onClick={handleSelectPage}>{i}</a>
+                </li>
+            );
+        };
+
         return (
-            <div className='search-results-view'>
-                <div className='search-query container'>
-                    <form className='py-4'>
-                        <div className='row align-items-center justify-content-center'>
-                            <div className='col col-6 col-sm-5  mb-3'>
+            <div aria-label='Page navigation'>
+                <ul className='pagination justify-content-center'>
+                    <li className={`page-item ${currentPage == 1 ? 'disabled' : ''}`}>
+                        <a className='page-link' href='#' aria-label='Previous' onClick={handlePreviousPage}>
+                            <span aria-hidden='true'>&laquo;</span>
+                        </a>
+                    </li>
+                    {pages}
+                    <li className={`page-item ${currentPage == totalPages ? 'disabled' : ''}`}>
+                        <a className='page-link' href='#' aria-label='Next' onClick={handleNextPage}>
+                            <span aria-hidden='true'>&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        );
+    }
+
+    useEffect(() => {
+        getServices();
+        if (location.state) {
+            setSelectedCity(location.state.selectedCity);
+            setSelectedService(location.state.selectedService);
+        }
+    }, [])
+
+    useEffect(() => {
+        if (selectedCity && selectedService) {
+            findPhotographers();
+        }
+    }, [currentPage, resultsPerPage, selectedCity, selectedService])
+
+    return (
+        <div className='search-results-view'>
+            <div className='search-query container'>
+                <form className='py-4'>
+                    <div className='row align-items-center justify-content-center'>
+                        <div className='col col-6 col-sm-5  mb-3'>
+                            <div className='input-group'>
+                                <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
+                                <select className='form-select' id='serviceCategory'
+                                    value={selectedService} onChange={handleServiceChange}>
+                                    {services.map((category) => (
+                                        <option key={category.id} value={category.id}>{category.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className='col col-6 col-sm-5 mb-3'>
+                            <div className='input-group'>
+                                <label className='input-group-text' htmlFor='city'>Near</label>
+                                <input type='text' className='form-control' id='city'
+                                    placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} aria-label='City' />
+                            </div>
+                        </div>
+                        <div className='col col-12 col-sm-2 mb-3 d-grid'>
+                            <button type='button' className='btn btn-primary' onClick={findPhotographers}>Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div className='search-display container'>
+                <div className='row align-items-start'>
+                    <div className='filter col col-12 col-md-3'>
+                        <h5>Filters</h5>
+                        <div className='border border-seconday'>
+                            <div className='slidecontainer'>
+                                <label htmlFor='priceRange'>Price Range</label>
+                                <input type='range' min='1' max='100' value='50' onChange={handlePriceChange}
+                                    className='slider' id='priceRange' />
+                            </div>
+                        </div>
+                    </div>
+                    <div className='search-results col col-12 col-md-9 text-start'>
+                        <div className='row align-items-end mb-3'>
+                            <div className='col col-8'>
+                                <h3>{totalPhotographers} Photographers in your area</h3>
+                            </div>
+                            <div className='col col-4'>
                                 <div className='input-group'>
-                                    <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
-                                    <select className='form-select' id='serviceCategory'
-                                        value={this.state.selectedService} onChange={this.handleServiceChange}>
-                                        {this.state.services.map((category) => (
-                                            <option key={category.id} value={category.id}>{category.name}</option>
-                                        ))}
+                                    <label className='input-group-text' htmlFor='sortBy'>Sort by</ label>
+                                    <select value={1} className='form-select' id='sortBy'>
+                                        <option value={1}>alphabetics</option>
+                                        <option value={2}>price low to high</option>
+                                        <option value={3}>price high to low</option>
                                     </select>
                                 </div>
                             </div>
-                            <div className='col col-6 col-sm-5 mb-3'>
+                        </div>
+                        <div className='results-list'>
+                            {photographers.map((photographer) => (
+                                <PhotographerList
+                                    key={photographer.id}
+                                    id={photographer.id}
+                                    name={photographer.name}
+                                    city={photographer.city}
+                                    offeredServices={photographer.services}
+                                    address={photographer.address}
+                                    profilePhoto={photographer.profile_photo}
+                                    photos={photographer.photos}
+                                    allServices={services}
+                                />
+                            ))}
+                        </div>
+                        <div className='row justify-content-between'>
+                            <div className='col col-12 col-sm-4'>
                                 <div className='input-group'>
-                                    <label className='input-group-text' htmlFor='location'>Near</label>
-                                    <input type='text' className='form-control' id='location'
-                                        placeholder={this.state.location} onChange={this.handleLocationChange} aria-label='Location' />
+                                    <label className='input-group-text' htmlFor='resultsPerPage'>Results per page</ label>
+                                    <select className='form-select' id='resultsPerPage'
+                                        value={resultsPerPage} onChange={handleResultsPerPageChange}>
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={15}>15</option>
+                                        <option value={20}>20</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div className='col col-12 col-sm-2 mb-3 d-grid'>
-                                <button type='button' className='btn btn-primary' onClick={this.findPhotographers}>Search</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div className='search-display container'>
-                    <div className='row align-items-start'>
-                        <div className='filter col col-12 col-md-3'>
-                            <h5>Filters</h5>
-                            <div className='border border-seconday'>
-                                <div className='slidecontainer'>
-                                    <label htmlFor='priceRange'>Price Range</label>
-                                    <input type='range' min='1' max='100' value='50' onChange={this.handlePriceChange}
-                                        className='slider' id='priceRange' />
-                                </div>
-                            </div>
-                        </div>
-                        <div className='search-results col col-12 col-md-9 text-start'>
-                            <h3>{this.state.totalPhotographers} Photographers in your area</h3>
-                            <div className='results-list'>
-                                {this.state.photographers.map((photographer) => (
-                                    <PhotographerList
-                                        key={photographer.id}
-                                        id={photographer.id}
-                                        name={photographer.name}
-                                        city={photographer.city}
-                                        offeredServices={photographer.services}
-                                        address={photographer.address}
-                                        profilePhoto={photographer.profile_photo}
-                                        allServices={this.state.services}
-                                    />
-                                ))}
+                            <div className='col col-12 col-sm-8'>
+                                <Pagination />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        )
-    }
+        </div>
+    )
 }
 
 export default SearchResultsView
