@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import ServiceCategory from '../components/ServiceCategory';
 import axios from "axios";
 
 function SearchView(props) {
@@ -22,7 +21,7 @@ function SearchView(props) {
             })
     }
 
-    function changeCategory(id) {
+    function handleSelectCategory(id) {
         setSelectedService(selectedService === id ? null : id)
     }
 
@@ -37,6 +36,21 @@ function SearchView(props) {
                 'selectedCity': selectedCity
             }
         })
+    }
+
+    function ServiceCategory(props) {
+        const { id, name, image, selected } = props;
+        return (
+            <div className="col">
+                <div className={`card border-2 ${selected ? 'border-primary' : 'border-light-subtle'}`}
+                    onClick={() => { handleSelectCategory(id) }}>
+                    <img src={`../assets/${image}`} className='card-img-top' alt={`${image}`} />
+                    <div className='card-body'>
+                        <h6 className='card-title'>{name.toLowerCase()}</h6>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     useEffect(() => {
@@ -55,7 +69,6 @@ function SearchView(props) {
                             name={category.name}
                             image={category.image_link}
                             selected={selectedService === category.id ? true : false}
-                            changeCategory={changeCategory}
                         />
                     ))}
                 </div>
@@ -63,9 +76,9 @@ function SearchView(props) {
                 <div className='row'>
                     <div className='col'>
                         <div className='input-group'>
-                            <span className='input-group-text'>City or zip code</span>
-                            <input type='text' className='form-control' id='city' placeholder='City' aria-label='City' onChange={handleCityChange} />
-                            <input type='text' className='form-control' id='zipcode' placeholder='Zip Code' aria-label='City' />
+                            <span className='input-group-text'>Location</span>
+                            <input type='text' className='form-control' id='city' placeholder='City or zip code' aria-label='City'
+                                onChange={handleCityChange} />
                         </div>
                     </div>
                 </div>

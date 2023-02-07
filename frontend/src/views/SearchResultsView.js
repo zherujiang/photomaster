@@ -4,16 +4,17 @@ import PhotographerList from '../components/PhotographerList';
 import axios from "axios";
 
 function SearchResultsView(props) {
+    const location = useLocation();
     const [services, setServices] = useState([]);
-    const [selectedService, setSelectedService] = useState(1);
-    const [selectedCity, setSelectedCity] = useState('Seattle');
+    const [selectedService, setSelectedService] = useState(undefined);
+    const [selectedCity, setSelectedCity] = useState('');
     const [totalPhotographers, setTotalPhotographers] = useState(0);
     const [photographers, setPhotographers] = useState([]);
     const [maxPrice, setMaxPrice] = useState(1000);
     const [resultsPerPage, setResultsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortBy, setSortBy] = useState(1);
 
-    const location = useLocation();
 
     function getServices() {
         axios.get('/services')
@@ -26,40 +27,11 @@ function SearchResultsView(props) {
             })
     }
 
-    function handleServiceChange(event) {
-        setSelectedService(event.target.value);
-    }
-
-    function handleCityChange(event) {
-        setSelectedCity(event.target.value);
-    }
-
-    function handlePriceChange(event) {
-        setMaxPrice(event.target.value);
-    }
-
-    function handleResultsPerPageChange(event) {
-        setResultsPerPage(event.target.value);
-        setCurrentPage(1);
-    }
-
-    function handleSelectPage(event) {
-        setCurrentPage(parseInt(event.target.innerHTML));
-    }
-
-    function handlePreviousPage(event) {
-        setCurrentPage(currentPage - 1);
-    }
-
-    function handleNextPage(event) {
-        setCurrentPage(currentPage + 1);
-    }
-
-    function findPhotographers() {
+    function findPhotographers(service = selectedService, city = selectedCity) {
         axios.get('/photographers', {
             params: {
-                service: selectedService,
-                location: selectedCity,
+                service: service,
+                location: city,
                 results_per_page: resultsPerPage,
                 current_page: currentPage
             }
@@ -72,6 +44,43 @@ function SearchResultsView(props) {
             .catch(function (error) {
                 console.log(error);
             })
+    }
+
+    function handleSelectService(event) {
+        setSelectedService(event.target.value);
+    }
+
+    function handleCityChange(event) {
+        setSelectedCity(event.target.value);
+    }
+
+    function submitSearch() {
+        findPhotographers();
+    }
+
+    function handleSelectPriceRange(event) {
+        setMaxPrice(event.target.value);
+    }
+
+    function handleSelectSortBy(event) {
+        setSortBy(event.target.value);
+    }
+
+    function handleSelectResultsPerPage(event) {
+        setResultsPerPage(event.target.value);
+        setCurrentPage(1);
+    }
+
+    function handleSelectPage(event) {
+        setCurrentPage(parseInt(event.target.innerHTML));
+    }
+
+    function handlePreviousPage() {
+        setCurrentPage(currentPage - 1);
+    }
+
+    function handleNextPage() {
+        setCurrentPage(currentPage + 1);
     }
 
     function Pagination(props) {
@@ -109,19 +118,21 @@ function SearchResultsView(props) {
         );
     }
 
+    // initialization, load all service categories, set selected service and city, load search results if transferred from SearchView
     useEffect(() => {
         getServices();
         if (location.state) {
-            setSelectedCity(location.state.selectedCity);
             setSelectedService(location.state.selectedService);
+            setSelectedCity(location.state.selectedCity);
+            findPhotographers(location.state.selectedService, location.state.selectedCity);
         }
     }, [])
 
     useEffect(() => {
-        if (selectedCity && selectedService) {
+        if (selectedService && selectedCity) {
             findPhotographers();
         }
-    }, [currentPage, resultsPerPage, selectedCity, selectedService])
+    }, [currentPage, resultsPerPage])
 
     return (
         <div className='search-results-view'>
@@ -132,7 +143,7 @@ function SearchResultsView(props) {
                             <div className='input-group'>
                                 <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
                                 <select className='form-select' id='serviceCategory'
-                                    value={selectedService} onChange={handleServiceChange}>
+                                    value={selectedService} onChange={handleSelectService}>
                                     {services.map((category) => (
                                         <option key={category.id} value={category.id}>{category.name}</option>
                                     ))}
@@ -147,7 +158,7 @@ function SearchResultsView(props) {
                             </div>
                         </div>
                         <div className='col col-12 col-sm-2 mb-3 d-grid'>
-                            <button type='button' className='btn btn-primary' onClick={findPhotographers}>Search</button>
+                            <button type='button' className='btn btn-primary' onClick={submitSearch}>Search</button>
                         </div>
                     </div>
                 </form>
@@ -159,7 +170,7 @@ function SearchResultsView(props) {
                         <div className='border border-seconday'>
                             <div className='slidecontainer'>
                                 <label htmlFor='priceRange'>Price Range</label>
-                                <input type='range' min='1' max='100' value='50' onChange={handlePriceChange}
+                                <input type='range' min='1' max='100' value='50' onChange={handleSelectPriceRange}
                                     className='slider' id='priceRange' />
                             </div>
                         </div>
@@ -172,8 +183,8 @@ function SearchResultsView(props) {
                             <div className='col col-4'>
                                 <div className='input-group'>
                                     <label className='input-group-text' htmlFor='sortBy'>Sort by</ label>
-                                    <select value={1} className='form-select' id='sortBy'>
-                                        <option value={1}>alphabetics</option>
+                                    <select value={1} className='form-select' id='sortBy' onChange={handleSelectSortBy}>
+                                        <option value={1}>A to Z</option>
                                         <option value={2}>price low to high</option>
                                         <option value={3}>price high to low</option>
                                     </select>
@@ -200,7 +211,7 @@ function SearchResultsView(props) {
                                 <div className='input-group'>
                                     <label className='input-group-text' htmlFor='resultsPerPage'>Results per page</ label>
                                     <select className='form-select' id='resultsPerPage'
-                                        value={resultsPerPage} onChange={handleResultsPerPageChange}>
+                                        value={resultsPerPage} onChange={handleSelectResultsPerPage}>
                                         <option value={5}>5</option>
                                         <option value={10}>10</option>
                                         <option value={15}>15</option>
