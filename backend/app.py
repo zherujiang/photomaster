@@ -289,6 +289,7 @@ def create_app(database_path):
     def get_photos(photographer_id):
         photographer = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
+        print(photographer_id)
         if not photographer:
             abort(404)
 

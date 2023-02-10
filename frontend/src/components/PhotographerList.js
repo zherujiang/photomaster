@@ -1,9 +1,10 @@
-import { isAxiosError } from 'axios';
 import React from 'react';
+import PhotoSlides from './PhotoSlides';
 
 function PhotographerList(props) {
     const { id, name, city, offeredServices, address, profilePhoto, photos, allServices } = props;
 
+    // helper function to format photographer names
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
@@ -15,50 +16,11 @@ function PhotographerList(props) {
         }
         return photographerName;
     }
-    function getServiceName(id, allServices) {
+
+    // helper function to get service category names
+    function findServiceName(id, allServices) {
         const service = allServices.find(element => element.id == id);
         return service.name;
-    }
-
-    function PhotoSlides(props) {
-        const photos = props.photos;
-        if (photos.length < 1) {
-            return null
-        } else {
-            let photoList = [];
-            for (let i = 0; i < photos.length; i++) {
-                photoList.push(
-                    <img key={photos[i].id} className='d-block' src={`../assets/${photos[i].filename}`} alt={photos[i].filename} />
-                )
-            };
-
-            if (photos.length <= 4) {
-                return (
-                    <div className='carousel-inner'>
-                        <div className='carousel-item active'>
-                            <div className='row row-cols-2 row-cols-sm-4'>
-                                {photoList}
-                            </div>
-                        </div>
-                    </div>
-                );
-            } else {
-                return (
-                    <div className='carousel-inner'>
-                        <div className='carousel-item active'>
-                            <div className='row row-cols-2 row-cols-sm-4'>
-                                {photoList.slice(0, 4)}
-                            </div>
-                        </div>
-                        <div className='carousel-item'>
-                            <div className='row row-cols-2 row-cols-sm-4'>
-                                {photoList.slice(4, photos.length)}
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-        }
     }
 
     return (
@@ -81,7 +43,7 @@ function PhotographerList(props) {
                             return (
                                 <div key={category_id} className='col-auto'>
                                     <span key={category_id} className='badge bg-info badge-info'>
-                                        {getServiceName(category_id, allServices)}
+                                        {findServiceName(category_id, allServices)}
                                     </span>
                                 </div>
                             )
@@ -91,13 +53,17 @@ function PhotographerList(props) {
                 <div className='col col-12 col-sm-2'>
                     <div className='row text-end'><h6>Price Range</h6></div>
                     <div className='row'>
-                        <button type='button' className='btn btn-sm btn-primary'>View Details</button>
+                        <a href='#' className='btn btn-sm btn-primary w-100'>View Details</a>
                     </div>
                 </div>
             </div>
             <div className='row mb-3'>
                 <div id={`carousel-${id}`} className='carousel slide'>
-                    <PhotoSlides photos={photos} />
+                    <PhotoSlides
+                        photos={photos}
+                        photoPerSlide={4}
+                        maxSlides={2}
+                    />
                     <button className='carousel-control-prev' type='button' data-bs-target={`#carousel-${id}`} data-bs-slide='prev'>
                         <span className='carousel-control-prev-icon' aria-hidden='true'></span>
                         <span className='visually-hidden'>Previous</span>

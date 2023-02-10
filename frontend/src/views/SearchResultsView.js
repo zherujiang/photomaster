@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PhotographerList from '../components/PhotographerList';
+import Pagination from '../components/Pagination'
 import axios from "axios";
 
 function SearchResultsView(props) {
@@ -15,7 +16,7 @@ function SearchResultsView(props) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState(1);
 
-
+    // server request to get all service categories
     function getServices() {
         axios.get('/services')
             .then(response => {
@@ -27,6 +28,7 @@ function SearchResultsView(props) {
             })
     }
 
+    // server request to search photographers
     function findPhotographers(service = selectedService, city = selectedCity) {
         axios.get('/photographers', {
             params: {
@@ -46,6 +48,7 @@ function SearchResultsView(props) {
             })
     }
 
+    // handle user interactions to control search criteria
     function handleSelectService(event) {
         setSelectedService(event.target.value);
     }
@@ -71,6 +74,7 @@ function SearchResultsView(props) {
         setCurrentPage(1);
     }
 
+    // pagination functions
     function handleSelectPage(event) {
         setCurrentPage(parseInt(event.target.innerHTML));
     }
@@ -83,42 +87,7 @@ function SearchResultsView(props) {
         setCurrentPage(currentPage + 1);
     }
 
-    function Pagination(props) {
-        if (totalPhotographers == 0) {
-            return null
-        };
-
-        const pages = [];
-        const totalPages = Math.ceil(totalPhotographers / resultsPerPage);
-
-        for (let i = 1; i <= totalPages; i++) {
-            pages.push(
-                <li key={i} className={`page-item ${currentPage == i ? 'active' : ''}`}>
-                    <a className='page-link' href='#' onClick={handleSelectPage}>{i}</a>
-                </li>
-            );
-        };
-
-        return (
-            <div aria-label='Page navigation'>
-                <ul className='pagination justify-content-center'>
-                    <li className={`page-item ${currentPage == 1 ? 'disabled' : ''}`}>
-                        <a className='page-link' href='#' aria-label='Previous' onClick={handlePreviousPage}>
-                            <span aria-hidden='true'>&laquo;</span>
-                        </a>
-                    </li>
-                    {pages}
-                    <li className={`page-item ${currentPage == totalPages ? 'disabled' : ''}`}>
-                        <a className='page-link' href='#' aria-label='Next' onClick={handleNextPage}>
-                            <span aria-hidden='true'>&raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        );
-    }
-
-    // initialization, load all service categories, set selected service and city, load search results if transferred from SearchView
+    // initialization, load all service categories, set selected service and city, load search results if redirected from the SearchView
     useEffect(() => {
         getServices();
         if (location.state) {
@@ -128,6 +97,7 @@ function SearchResultsView(props) {
         }
     }, [])
 
+    //reload search results when user selects page or change results per page
     useEffect(() => {
         if (selectedService && selectedCity) {
             findPhotographers();
@@ -220,7 +190,14 @@ function SearchResultsView(props) {
                                 </div>
                             </div>
                             <div className='col col-12 col-sm-8'>
-                                <Pagination />
+                                <Pagination
+                                    totalPhotographers={totalPhotographers}
+                                    resultsPerPage={resultsPerPage}
+                                    currentPage={currentPage}
+                                    handleSelectPage={handleSelectPage}
+                                    handlePreviousPage={handlePreviousPage}
+                                    handleNextPage={handleNextPage}
+                                />
                             </div>
                         </div>
                     </div>
