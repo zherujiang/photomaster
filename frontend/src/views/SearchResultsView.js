@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import PhotographerList from '../components/PhotographerList';
+import PhotographerSearchDisplay from '../components/PhotographerSearchDisplay';
 import Pagination from '../components/Pagination'
 import axios from "axios";
 
@@ -115,7 +115,7 @@ function SearchResultsView(props) {
                                 <select className='form-select' id='serviceCategory'
                                     value={selectedService} onChange={handleSelectService}>
                                     {services.map((category) => (
-                                        <option key={category.id} value={category.id}>{category.name}</option>
+                                        <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -163,16 +163,17 @@ function SearchResultsView(props) {
                         </div>
                         <div className='results-list'>
                             {photographers.map((photographer) => (
-                                <PhotographerList
-                                    key={photographer.id}
+                                <PhotographerSearchDisplay
+                                    key={`photographer-${photographer.id}`}
                                     id={photographer.id}
                                     name={photographer.name}
                                     city={photographer.city}
-                                    offeredServices={photographer.services}
                                     address={photographer.address}
+                                    services={photographer.services}
                                     profilePhoto={photographer.profile_photo}
                                     photos={photographer.photos}
                                     allServices={services}
+                                    selectedService={selectedService}
                                 />
                             ))}
                         </div>

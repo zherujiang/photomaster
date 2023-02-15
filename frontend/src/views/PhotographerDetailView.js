@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from "axios";
 import PhotoSlides from '../components/PhotoSlides';
 
 function PhotographerDetailView(props) {
-    const [photographerId, setPhotographerId] = useState(1);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [photographerId, setPhotographerId] = useState(location.state.photographerId);
+    const [allServices, setAllServices] = useState(location.state.allServices);
+    const [requestService, setRequestService] = useState(location.state.selectedService);
+
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
-    const [allServices, setAllServices] = useState([]);
     const [photos, setPhotos] = useState([]);
+
+    const [customerFirstName, setCustomerFirstName] = useState(undefined);
+    const [customerLastName, setCustomerLastName] = useState(undefined);
+    const [customerEmail, setCustomerEmail] = useState(undefined);
+    const [customerPhone, setCustomerPhone] = useState(undefined);
+    const [customerInterestedService, setCustomerInterestedService] = useState(undefined);
+    const [customerMessage, setCustomerMessage] = useState(undefined);
 
     // server request to get details about the selected photographer
     function getPhotographerDetails(photographer_id = photographerId) {
@@ -14,18 +26,6 @@ function PhotographerDetailView(props) {
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer']);
-            })
-            .catch(function (error) {
-                console.log(error);
-            })
-    }
-
-    // server request to get all service categories
-    function getServices() {
-        axios.get('/services')
-            .then(response => {
-                const data = response.data;
-                setAllServices(data['services']);
             })
             .catch(function (error) {
                 console.log(error);
@@ -49,11 +49,20 @@ function PhotographerDetailView(props) {
             })
     }
 
+    function handleBackToSearch() {
+        navigate(-1);
+    }
+
+    function handleRequestService(event) {
+        setRequestService(event.target.value);
+    }
+
     // helper function to capitalize names
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
+    // draw service category & prices components
     function ServiceCategory(props) {
         const { name, image } = props;
         return (
@@ -67,6 +76,7 @@ function PhotographerDetailView(props) {
         )
     }
 
+    // draw photographer details components
     function PhotographerInfo(props) {
         if (photographerDetails) {
             const name = photographerDetails.name;
@@ -76,13 +86,9 @@ function PhotographerDetailView(props) {
             const social_media = photographerDetails.social_media;
             const bio = photographerDetails.bio;
             const services = photographerDetails.services;
-            let offeredServices = [];
-
-            if (allServices) {
-                offeredServices = allServices.filter(
-                    (element) => services.includes(element.id)
-                )
-            };
+            const offeredServices = allServices.filter(
+                (element) => services.includes(element.id)
+            )
 
             return (
                 <div id='photographer-info' className='row justify-content-between align-items-start'>
@@ -137,7 +143,7 @@ function PhotographerDetailView(props) {
                             <div className='row row-cols-3 row-cols-md-5 my-3'>
                                 {offeredServices.map((category) => (
                                     <ServiceCategory
-                                        key={category.id}
+                                        key={`service-category-${category.id}`}
                                         name={category.name}
                                         image={category.image_link}
                                     />
@@ -172,10 +178,10 @@ function PhotographerDetailView(props) {
                             </div>
                             <div className='row mb-3'>
                                 <div className='col'>
-                                    <select className='form-select'
-                                        value='Select a service category'>
-                                        {photographerDetails.services.map((category) => (
-                                            <option key={category.id} value={category.id}>{category.id}</option>
+                                    <select className='form-select' value={requestService}
+                                        onChange={handleRequestService}>
+                                        {offeredServices.map((category) => (
+                                            <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -188,7 +194,7 @@ function PhotographerDetailView(props) {
                             </div>
                             <div className='row mb-3'>
                                 <div className='col'>
-                                    <button type='button' className='btn btn-primary w-100'>Send</button>
+                                    <button type='submit' className='btn btn-primary w-100'>Send</button>
                                 </div>
                             </div>
                         </form>
@@ -203,18 +209,18 @@ function PhotographerDetailView(props) {
     // initial render
     useEffect(() => {
         getPhotographerDetails();
-        getServices();
     }, [])
 
     useEffect(() => {
         getPhotographerPhotos();
-        console.log(photos);
     }, [photographerDetails])
 
     return (
         <div id='photographer-detail-view' className='container'>
             <div className='row'>
-                <a href='#' role='button' aria-label='Back to search'><span aria-hidden='true'>&lsaquo;</span>Back to Search</a>
+                <div className='col col-auto'>
+                    <button role='button' className='btn btn-link' onClick={handleBackToSearch}>&lsaquo; Back to Search</button>
+                </div>
             </div>
             <PhotographerInfo />
             <div id='photographer-gallery' className='row'>

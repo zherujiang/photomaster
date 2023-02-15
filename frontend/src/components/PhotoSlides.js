@@ -19,7 +19,7 @@ function PhotoSlides(props) {
         let slides = []
         for (let i = 0; i < numSlides; i++) {
             slides.push(
-                <div className='carousel-item active'>
+                <div key={i} className='carousel-item active'>
                     <div className={`row row-cols-2 row-cols-sm-${photoPerSlide}`}>
                         {photoList.slice(photoPerSlide * i, photoPerSlide * (i + 1))}
                     </div>

@@ -1,8 +1,25 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PhotoSlides from './PhotoSlides';
 
-function PhotographerList(props) {
-    const { id, name, city, offeredServices, address, profilePhoto, photos, allServices } = props;
+function PhotographerSearchDisplay(props) {
+    const { id, name, city, address, services, profilePhoto, photos, allServices, selectedService } = props;
+
+    // format services offered by this photographer
+    let offeredServices = allServices.filter(
+        (element) => services.includes(element.id)
+    );
+
+    const navigate = useNavigate();
+    function viewPhotographerDetails() {
+        navigate('/photographer', {
+            state: {
+                'photographerId': id,
+                'allServices': allServices,
+                'selectedService': selectedService,
+            }
+        })
+    }
 
     // helper function to format photographer names
     function capitalizeFirstLetter(string) {
@@ -15,12 +32,6 @@ function PhotographerList(props) {
             photographerName += capitalizeFirstLetter(words[i])
         }
         return photographerName;
-    }
-
-    // helper function to get service category names
-    function findServiceName(id, allServices) {
-        const service = allServices.find(element => element.id == id);
-        return service.name;
     }
 
     return (
@@ -39,11 +50,11 @@ function PhotographerList(props) {
                         <div className='col col-auto'>{`Address:${address}`}</div>
                     </div>
                     <div className='row justify-content-start'>
-                        {offeredServices.map((category_id) => {
+                        {offeredServices.map((category) => {
                             return (
-                                <div key={category_id} className='col-auto'>
-                                    <span key={category_id} className='badge bg-info badge-info'>
-                                        {findServiceName(category_id, allServices)}
+                                <div key={`service-badge-${category.id}`} className='col-auto'>
+                                    <span className='badge bg-info badge-info'>
+                                        {category.name}
                                     </span>
                                 </div>
                             )
@@ -53,7 +64,7 @@ function PhotographerList(props) {
                 <div className='col col-12 col-sm-2'>
                     <div className='row text-end'><h6>Price Range</h6></div>
                     <div className='row'>
-                        <a href='#' className='btn btn-sm btn-primary w-100'>View Details</a>
+                        <button className='btn btn-sm btn-primary w-100' onClick={viewPhotographerDetails}>View Details</button>
                     </div>
                 </div>
             </div>
@@ -79,4 +90,4 @@ function PhotographerList(props) {
 
 }
 
-export default PhotographerList
+export default PhotographerSearchDisplay
