@@ -105,9 +105,9 @@ function SearchResultsView(props) {
     }, [currentPage, resultsPerPage])
 
     return (
-        <div className='search-results-view'>
-            <div className='search-query container'>
-                <form className='py-4'>
+        <div id='search-results-view' className='py-3'>
+            <div className='search-query container my-3'>
+                <form>
                     <div className='row align-items-center justify-content-center'>
                         <div className='col col-6 col-sm-5  mb-3'>
                             <div className='input-group'>
@@ -133,19 +133,19 @@ function SearchResultsView(props) {
                     </div>
                 </form>
             </div>
-            <div className='search-display container'>
+            <div id='search-display' className='container pt-3'>
                 <div className='row align-items-start'>
-                    <div className='filter col col-12 col-md-3'>
+                    <div id='search-filter' className='col col-12 col-md-3 mb-4'>
                         <h5>Filters</h5>
-                        <div className='border border-seconday'>
+                        <div className='border border-seconday p-3'>
                             <div className='slidecontainer'>
                                 <label htmlFor='priceRange'>Price Range</label>
                                 <input type='range' min='1' max='100' value='50' onChange={handleSelectPriceRange}
-                                    className='slider' id='priceRange' />
+                                    className='slider d-block w-100 mt-2' id='priceRange' />
                             </div>
                         </div>
                     </div>
-                    <div className='search-results col col-12 col-md-9 text-start'>
+                    <div id='search-results' className='col col-12 col-md-9 text-start mb-4'>
                         <div className='row align-items-end mb-3'>
                             <div className='col col-8'>
                                 <h3>{totalPhotographers} Photographers in your area</h3>
@@ -161,21 +161,23 @@ function SearchResultsView(props) {
                                 </div>
                             </div>
                         </div>
-                        <div className='results-list'>
-                            {photographers.map((photographer) => (
-                                <PhotographerSearchDisplay
-                                    key={`photographer-${photographer.id}`}
-                                    id={photographer.id}
-                                    name={photographer.name}
-                                    city={photographer.city}
-                                    address={photographer.address}
-                                    services={photographer.services}
-                                    profilePhoto={photographer.profile_photo}
-                                    photos={photographer.photos}
-                                    allServices={services}
-                                    selectedService={selectedService}
-                                />
-                            ))}
+                        <div id='results-list' className='row'>
+                            <div className='col'>
+                                {photographers.map((photographer) => (
+                                    <PhotographerSearchDisplay
+                                        key={`photographer-${photographer.id}`}
+                                        id={photographer.id}
+                                        name={photographer.name}
+                                        city={photographer.city}
+                                        address={photographer.address}
+                                        services={photographer.services}
+                                        profilePhoto={photographer.profile_photo}
+                                        photos={photographer.photos}
+                                        allServices={services}
+                                        selectedService={selectedService}
+                                    />
+                                ))}
+                            </div>
                         </div>
                         <div className='row justify-content-between'>
                             <div className='col col-12 col-sm-4'>

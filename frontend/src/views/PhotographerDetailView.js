@@ -91,16 +91,16 @@ function PhotographerDetailView(props) {
             )
 
             return (
-                <div id='photographer-info' className='row justify-content-between align-items-start'>
+                <div id='photographer-info' className='row justify-content-between align-items-start my-3'>
                     <div className='col col-12 col-lg-8'>
-                        <div id='profile-info' className='row justify-content-start my-3'>
+                        <div id='profile-info' className='row justify-content-start mb-3'>
                             <div className='col col-4 col-md-3'>
                                 <img src='../assets/profile.jpg' className='rounded img-fluid object-fit-contain' alt='photographer profile image' />
                             </div>
                             <div className='col col-8 col-md-9'>
                                 <div className='row'>
                                     <div className='col col-auto'>
-                                        <h5>{name}</h5>
+                                        <h5>{capitalizeFirstLetter(name)}</h5>
                                     </div>
                                 </div>
                                 <div className='row'>
@@ -140,7 +140,7 @@ function PhotographerDetailView(props) {
                         </div>
                         <div id='services-prices' className='row mb-3'>
                             <h5>Service and fees</h5>
-                            <div className='row row-cols-3 row-cols-md-5 my-3'>
+                            <div className='row row-cols-3 row-cols-md-5 mt-3'>
                                 {offeredServices.map((category) => (
                                     <ServiceCategory
                                         key={`service-category-${category.id}`}
@@ -151,8 +151,8 @@ function PhotographerDetailView(props) {
                             </div>
                         </div>
                     </div>
-                    <div id='contact-form' className='col col-12 col-lg-3 border rounded p-4'>
-                        <form>
+                    <div id='contact-form' className='col col-12 col-lg-3'>
+                        <form className='border rounded p-4'>
                             <div className='row mb-3'>
                                 <div className='col'>
                                     <h5>Contact Photographer</h5>
@@ -216,30 +216,32 @@ function PhotographerDetailView(props) {
     }, [photographerDetails])
 
     return (
-        <div id='photographer-detail-view' className='container'>
+        <div id='photographer-detail-view' className='container py-4'>
             <div className='row'>
                 <div className='col col-auto'>
                     <button role='button' className='btn btn-link' onClick={handleBackToSearch}>&lsaquo; Back to Search</button>
                 </div>
             </div>
             <PhotographerInfo />
-            <div id='photographer-gallery' className='row'>
-                <h5>Featured Gallery</h5>
-                <div className='border rounded'>
-                    <div id='photo-carousel' className='carousel slide'>
-                        <PhotoSlides
-                            photos={photos}
-                            photoPerSlide={5}
-                            maxSlides={4}
-                        />
-                        <button className='carousel-control-prev' type='button' data-bs-target='photo-carousel' data-bs-slide='prev'>
-                            <span className='carousel-control-prev-icon' aria-hidden='true'></span>
-                            <span className='visually-hidden'>Previous</span>
-                        </button>
-                        <button className='carousel-control-next' type='button' data-bs-target='photo-carousel' data-bs-slide='next'>
-                            <span className='carousel-control-next-icon' aria-hidden='true'></span>
-                            <span className='visually-hidden'>Next</span>
-                        </button>
+            <div id='photographer-gallery' className='row mb-3'>
+                <div className='col col-12'>
+                    <h5>Featured Gallery</h5>
+                    <div className='border rounded'>
+                        <div id='photo-carousel' className='carousel slide'>
+                            <PhotoSlides
+                                photos={photos}
+                                photoPerSlide={5}
+                                maxSlides={4}
+                            />
+                            <button className='carousel-control-prev' type='button' data-bs-target='photo-carousel' data-bs-slide='prev'>
+                                <span className='carousel-control-prev-icon' aria-hidden='true'></span>
+                                <span className='visually-hidden'>Previous</span>
+                            </button>
+                            <button className='carousel-control-next' type='button' data-bs-target='photo-carousel' data-bs-slide='next'>
+                                <span className='carousel-control-next-icon' aria-hidden='true'></span>
+                                <span className='visually-hidden'>Next</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

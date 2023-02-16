@@ -41,7 +41,7 @@ function PhotographerSearchDisplay(props) {
                     {/* <img src={`../assets/${profilePhoto}`} className='rounded img-fluid' alt='photographer profile image' /> */}
                     <img src='../assets/profile.jpg' className='rounded img-fluid' alt='photographer profile image' />
                 </div>
-                <div className='col col-8 col-sm-8'>
+                <div className='col col-8 col-sm-7'>
                     <div className='row justify-content-start'>
                         <h5>{capitalizeName(name)}</h5>
                     </div>
@@ -61,10 +61,12 @@ function PhotographerSearchDisplay(props) {
                         })}
                     </div>
                 </div>
-                <div className='col col-12 col-sm-2'>
+                <div className='col col-12 col-sm-3'>
                     <div className='row text-end'><h6>Price Range</h6></div>
                     <div className='row'>
-                        <button className='btn btn-sm btn-primary w-100' onClick={viewPhotographerDetails}>View Details</button>
+                        <div className='col'>
+                            <button className='btn btn-sm btn-primary w-100' onClick={viewPhotographerDetails}>View Details</button>
+                        </div>
                     </div>
                 </div>
             </div>
