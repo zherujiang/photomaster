@@ -183,6 +183,26 @@ def create_app(database_path):
                 'success': True,
                 'photographer': photographer_query.details()
             })
+            
+    # when signing in as a photographer, temporary helper function to find the matching photographer acount
+    @app.route('/photographer-accounts', methods=['GET'])
+    def find_photographer_account():
+        email = request.args.get('email')     
+        photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
+        
+        if not photographer_query:
+            return jsonify({
+                'success': False,
+                'message': 'can not find matching account'
+            })
+        else:
+            photographer_id = photographer_query.id
+            
+            return jsonify({
+                'success': True,
+                'photographer_id': photographer_id,
+                'photographer_details': photographer_query.details()
+            })
 
     # add a photographer, to be completed
     @app.route('/photographers', methods=['POST'])

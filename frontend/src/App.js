@@ -7,8 +7,8 @@ import LogIn from './views/LogIn';
 import SearchView from './views/SearchView';
 import SearchResultsView from './views/SearchResultsView';
 import PhotographerDetailView from './views/PhotographerDetailView';
-// import FormView from './views/FormView';
-
+import PhotographerAccountView from './views/PhotographerAccountView';
+import PhotographerEditView from './views/PhotographerEditView';
 
 class App extends Component {
   render() {
@@ -23,6 +23,8 @@ class App extends Component {
               <Route path='/search' element={<SearchView />} />
               <Route path='/searchresults' element={<SearchResultsView />} />
               <Route path='/photographer' element={<PhotographerDetailView />} />
+              <Route path='/my-account' element={<PhotographerAccountView />} />
+              <Route path='/photographer-edit' element={<PhotographerEditView />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
 function SearchView(props) {
@@ -8,7 +8,6 @@ function SearchView(props) {
     const [selectedCity, setSelectedCity] = useState(null);
 
     const navigate = useNavigate();
-    const location = useLocation();
 
     function getServices() {
         axios.get('/services')
