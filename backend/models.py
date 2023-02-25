@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, Boolean
 from flask_sqlalchemy import SQLAlchemy
 import json
 
@@ -59,11 +59,11 @@ class Photographer(db.Model):
     name = Column(String(120), nullable=False)
     email = Column(String(120), nullable=False)
     city = Column(String(120))
+    can_travel = Column(Boolean, nullable=False, default=False)
     services = Column(db.ARRAY(Integer, dimensions=1))
     profile_photo = Column(String(255))
     address = Column(String(255))
     portfolio_link = Column(String(255))
-    social_media = Column(String(255))
     bio = Column(db.Text)
 
     # relationships
@@ -82,6 +82,7 @@ class Photographer(db.Model):
             'id': self.id,
             'name': self.name,
             'city': self.city,
+            'can_travel': self.can_travel,
             'address': self.address,
             'services': self.services,
             'profile_photo': self.profile_photo,
@@ -93,11 +94,11 @@ class Photographer(db.Model):
             'name': self.name,
             'email': self.email,
             'city': self.city,
+            'can_travel': self.can_travel, 
             'address': self.address,
             'services': self.services,
             'profile_photo': self.profile_photo,
             'portfolio_link': self.portfolio_link,
-            'social_media': self.social_media,
             'bio': self.bio
         }
 

@@ -5,20 +5,17 @@ function PhotographerAccountView() {
     const location = useLocation();
     const navigate = useNavigate();
     const [photographerId, setPhotographerId] = useState(location.state.photographerId);
-    const [photographerDetails, setPhotographerDetails] = useState(location.state.photographerDetails);
 
     useEffect(() => {
         // if (location.state) {
         //     setPhotographerId(location.state.photographerId);
-        //     setPhotographerDetails(location.state.photographerDetails);
         // }
     })
 
     function handleEditProfile() {
         navigate('/photographer-edit', {
             state: {
-                'photographerId': photographerId,
-                'photographerDetails': photographerDetails
+                'photographerId': photographerId
             }
         })
     }
@@ -30,18 +27,6 @@ function PhotographerAccountView() {
         //     }
         // })
     }
-
-    // function UserName(props) {
-    //     if (photographerDetails) {
-    //         return (
-    //             <div className='col'>
-    //                 <p>{photographerDetails.name}</p>
-    //             </div>
-    //         )
-    //     } else {
-    //         return null
-    //     }
-    // }
 
     return (
         <div id='myAccount'>

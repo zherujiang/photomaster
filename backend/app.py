@@ -200,8 +200,7 @@ def create_app(database_path):
             
             return jsonify({
                 'success': True,
-                'photographer_id': photographer_id,
-                'photographer_details': photographer_query.details()
+                'photographer_id': photographer_id
             })
 
     # add a photographer, to be completed
@@ -233,41 +232,38 @@ def create_app(database_path):
 
         if request.method == 'GET':
             # load the photographer information and render the form
-            photos_query = Photo.query.filter(
-                Photo.photographer_id == photographer_id).all()
-            prices_query = Price.query.filter(Price.photographer_id == photographer_id).\
-                order_by(Price.service_id).all()
-            photos = [photo.format() for photo in photos_query]
-            prices = [price.format() for price in prices_query]
+            # prices_query = Price.query.filter(Price.photographer_id == photographer_id).\
+            #     order_by(Price.service_id).all()
+            # prices = [price.format() for price in prices_query]
 
             return jsonify({
                 'success': True,
                 'photographer': photographer.details(),
-                'photos': photos,
-                'prices': prices
+                # 'prices': prices
             })
-        else:
+        elif request.method == 'PATCH':
             try:
                 # parse data from the submitted form
                 request_body = request.get_json()
+                name = request_body.get('name')
                 city = request_body.get('city')
-                services = request_body.get('services')
+                can_travel = request_body.get('can_travel')
                 address = request_body.get('address')
+                services = request_body.get('services')
                 profile_photo = request_body.get('profile_photo')
                 portfolio_link = request_body.get('portfolio_link')
-                social_media = request_body.get('social_media')
                 bio = request_body.get('bio')
-                photos_query = photographer.photos
-                photos = [photo.format() for photo in photos_query]
+                
                 # todo: add price for selected services
 
                 # update photographer with submitted information
+                photographer.name = name
                 photographer.city = city
-                photographer.services = services
+                photographer.can_travel = can_travel
                 photographer.address = address
+                photographer.services = services
                 photographer.profile_photo = profile_photo
                 photographer.portfolio_link = portfolio_link
-                photographer.social_media = social_media
                 photographer.bio = bio
 
                 photographer.update()
@@ -275,7 +271,6 @@ def create_app(database_path):
                 return jsonify({
                     'success': True,
                     'photographer': photographer.details(),
-                    'photos': photos,
                 })
             except:
                 abort(422)

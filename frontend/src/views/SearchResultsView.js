@@ -138,7 +138,13 @@ function SearchResultsView(props) {
                     <div id='search-filter' className='col col-12 col-md-3 mb-4'>
                         <h5>Filters</h5>
                         <div className='border border-seconday p-3'>
-                            <div className='slidecontainer'>
+                            <div id='travel-option' className='mb-3 py-2'>
+                                <div className='form-check'>
+                                    <input className='form-check-input' type='checkbox' id='flexibleLocation' />
+                                    <label className='form-check-label' htmlFor='flexibleLocation'>Accept travel (photographers)</label>
+                                </div>
+                            </div>
+                            <div id='slide-container' className='mb-3'>
                                 <label htmlFor='priceRange'>Price Range</label>
                                 <input type='range' min='1' max='100' value='50' onChange={handleSelectPriceRange}
                                     className='slider d-block w-100 mt-2' id='priceRange' />
@@ -169,6 +175,7 @@ function SearchResultsView(props) {
                                         id={photographer.id}
                                         name={photographer.name}
                                         city={photographer.city}
+                                        can_travel={photographer.can_travel}
                                         address={photographer.address}
                                         services={photographer.services}
                                         profilePhoto={photographer.profile_photo}
