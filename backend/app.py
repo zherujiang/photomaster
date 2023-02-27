@@ -147,9 +147,15 @@ def create_app(database_path):
             
             for photographer in photographer_query:
                 photo_preview = photographer.photos[:8]
+                price_query = photographer.prices[0]
+                price = price_query.prices[int(service_id) - 1]
+                price_type = price_query.price_types[int(service_id) - 1]
+
                 photos = [photo.format() for photo in photo_preview]
                 photographer_info = photographer.overview()
                 photographer_info['photos'] = photos
+                photographer_info['price'] = price
+                photographer_info['price_type'] = price_type
                 search_results.append(photographer_info)
                 
             # paginate search results and return
@@ -179,9 +185,14 @@ def create_app(database_path):
         if not photographer_query:
             abort(404)
         else:
+            price_query = photographer_query.prices[0]
+            price_data = price_query.format()
+            print(price_data)
+            
             return jsonify({
                 'success': True,
-                'photographer': photographer_query.details()
+                'photographer': photographer_query.details(),
+                'prices': price_data
             })
             
     # when signing in as a photographer, temporary helper function to find the matching photographer acount
@@ -231,19 +242,18 @@ def create_app(database_path):
         #     abort(401)
 
         if request.method == 'GET':
-            # load the photographer information and render the form
-            # prices_query = Price.query.filter(Price.photographer_id == photographer_id).\
-            #     order_by(Price.service_id).all()
-            # prices = [price.format() for price in prices_query]
+            # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
+            price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
+            price_data = price_query.format()
 
             return jsonify({
                 'success': True,
                 'photographer': photographer.details(),
-                # 'prices': prices
+                'prices': price_data
             })
         elif request.method == 'PATCH':
             try:
-                # parse data from the submitted form
+                # parse data from the request
                 request_body = request.get_json()
                 name = request_body.get('name')
                 city = request_body.get('city')
@@ -253,10 +263,17 @@ def create_app(database_path):
                 profile_photo = request_body.get('profile_photo')
                 portfolio_link = request_body.get('portfolio_link')
                 bio = request_body.get('bio')
-                
-                # todo: add price for selected services
+                prices = request_body.get('prices')
+                price_types = request_body.get('price_types')
+                           
+                # update price for the current photographer
+                price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
+                price_query.prices = prices
+                price_query.price_types = price_types
+                price_query.update()
+                price_data = price_query.format()
 
-                # update photographer with submitted information
+                # update photographer information
                 photographer.name = name
                 photographer.city = city
                 photographer.can_travel = can_travel
@@ -265,12 +282,12 @@ def create_app(database_path):
                 photographer.profile_photo = profile_photo
                 photographer.portfolio_link = portfolio_link
                 photographer.bio = bio
-
                 photographer.update()
 
                 return jsonify({
                     'success': True,
                     'photographer': photographer.details(),
+                    'prices': price_data
                 })
             except:
                 abort(422)
@@ -304,7 +321,6 @@ def create_app(database_path):
     def get_photos(photographer_id):
         photographer = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
-        print(photographer_id)
         if not photographer:
             abort(404)
 

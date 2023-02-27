@@ -175,9 +175,11 @@ function SearchResultsView(props) {
                                         id={photographer.id}
                                         name={photographer.name}
                                         city={photographer.city}
-                                        can_travel={photographer.can_travel}
+                                        canTravel={photographer.can_travel}
                                         address={photographer.address}
                                         services={photographer.services}
+                                        price={photographer.price}
+                                        priceType={photographer.price_type}
                                         profilePhoto={photographer.profile_photo}
                                         photos={photographer.photos}
                                         allServices={services}

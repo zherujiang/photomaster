@@ -25,10 +25,6 @@ class Service(db.Model):
     name = Column(String(60), nullable=False)
     image_link = Column(String(255))
 
-    # relationships
-    prices = db.relationship(
-        'Price', back_populates='service', cascade='all, delete')
-
     # methods
     def init(self, name):
         self.name = name
@@ -149,25 +145,23 @@ class Price(db.Model):
     __tablename__ = 'prices'
     photographer_id = Column(db.ForeignKey(
         'photographers.id', ondelete='CASCADE'), primary_key=True)
-    service_id = Column(db.ForeignKey(
-        'services.id', ondelete='CASCADE'), primary_key=True)
-    price = Column(db.Float, nullable=False)
+    prices = Column(db.ARRAY(db.Float, dimensions=1), nullable=False)
+    price_types = Column(db.ARRAY(Integer, dimensions=1), nullable=False)
 
     # relationships
     photographer = db.relationship('Photographer', back_populates='prices')
-    service = db.relationship('Service', back_populates='prices')
 
     # methods
-    def __init__(self, photographer_id, service_id, price):
+    def __init__(self, photographer_id, prices, price_types):
         self.photographer_id = photographer_id
-        self.service_id = service_id
-        self.price = price
+        self.prices = prices
+        self.price = price_types
 
     def format(self):
         return {
             'photographer_id': self.photographer_id,
-            'service_id': self.service_id,
-            'price': self.price,
+            'prices': self.prices,
+            'price_types': self.price_types,
         }
 
     def insert(self):

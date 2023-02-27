@@ -11,6 +11,7 @@ function PhotographerDetailView(props) {
     const [requestService, setRequestService] = useState(location.state.selectedService);
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
+    const [priceData, setPriceData] = useState(undefined);
     const [photos, setPhotos] = useState([]);
 
     const [customerFirstName, setCustomerFirstName] = useState(undefined);
@@ -26,15 +27,11 @@ function PhotographerDetailView(props) {
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer']);
+                setPriceData(data['prices'])
             })
             .catch(function (error) {
                 console.log(error);
             })
-    }
-
-    // server request to get prices of the service offered by this photographer
-    function getPhotographerPrices() {
-
     }
 
     // server request to get photos by this photographer
@@ -64,13 +61,15 @@ function PhotographerDetailView(props) {
 
     // draw service category & prices components
     function ServiceCategory(props) {
-        const { name, image } = props;
+        const { name, image, price, priceType } = props;
+        const priceModels = ['', 'Total', 'Per hour']
         return (
             <div className="col">
                 <img src={`../assets/${image}`} className='card-img-top rounded-circle' alt={`${image}`} />
                 <div className='card-body text-center py-2'>
-                    <h6 className='card-title'>{capitalizeFirstLetter(name.toLowerCase())}</h6>
-                    <p>Price</p>
+                    <h6>{capitalizeFirstLetter(name.toLowerCase())}</h6>
+                    <p className='m-0'>{`$ ${price}`}</p>
+                    <p><small>{priceModels[priceType]}</small></p>
                 </div>
             </div>
         )
@@ -82,13 +81,16 @@ function PhotographerDetailView(props) {
             const name = photographerDetails.name;
             const city = photographerDetails.city;
             const address = photographerDetails.address;
+            const canTravel = photographerDetails.can_travel;
             const portfolio_link = photographerDetails.portfolio_link;
             const social_media = photographerDetails.social_media;
             const bio = photographerDetails.bio;
             const services = photographerDetails.services;
             const offeredServices = allServices.filter(
                 (element) => services.includes(element.id)
-            )
+            );
+            const prices = priceData.prices;
+            const priceTypes = priceData.price_types;
 
             return (
                 <div id='photographer-info' className='row justify-content-between align-items-start my-3'>
@@ -146,6 +148,8 @@ function PhotographerDetailView(props) {
                                         key={`service-category-${category.id}`}
                                         name={category.name}
                                         image={category.image_link}
+                                        price={prices[parseInt(category.id) - 1]}
+                                        priceType={priceTypes[parseInt(category.id) - 1]}
                                     />
                                 ))}
                             </div>
