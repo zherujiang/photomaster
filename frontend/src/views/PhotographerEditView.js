@@ -37,7 +37,7 @@ function PhotographerEditView(props) {
 
     // server request to get photographer information to render the form
     function getPhotographerForm(photographer_id = photographerId) {
-        axios.get(`/photographers/${photographerId}`)
+        axios.get(`/photographer-edits/${photographerId}`)
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer']);
@@ -75,7 +75,7 @@ function PhotographerEditView(props) {
 
     // server request to submit photographer information updates
     function submitProfileUpdate() {
-        axios.patch(`/photographers/${photographerId}`, {
+        axios.patch(`/photographer-edits/${photographerId}`, {
             'name': name,
             'city': city,
             'can_travel': canTravel,

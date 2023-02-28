@@ -23,23 +23,12 @@ function PhotographerDetailView(props) {
 
     // server request to get details about the selected photographer
     function getPhotographerDetails(photographer_id = photographerId) {
-        axios.get(`/photographer-details/${photographerId}`)
+        axios.get(`/photographers/${photographerId}`)
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer']);
                 setPriceData(data['prices'])
-            })
-            .catch(function (error) {
-                console.log(error);
-            })
-    }
-
-    // server request to get photos by this photographer
-    function getPhotographerPhotos(photographer_id = photographerId) {
-        axios.get(`/photographers/${photographerId}/photos`)
-            .then(response => {
-                const data = response.data;
-                setPhotos(data['photos']);
+                setPhotos(data['photos'])
             })
             .catch(function (error) {
                 console.log(error);
@@ -214,10 +203,6 @@ function PhotographerDetailView(props) {
     useEffect(() => {
         getPhotographerDetails();
     }, [])
-
-    useEffect(() => {
-        getPhotographerPhotos();
-    }, [photographerDetails])
 
     return (
         <div id='photographer-detail-view' className='container py-4'>

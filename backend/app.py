@@ -42,10 +42,12 @@ def create_app(database_path):
             'services': services
         })
 
-    # add service categories, administrator only
-    # requires administrator permission
+    '''
+    add service categories, administrator only
+    requires administrator permission
+    '''
     @app.route('/services', methods=['POST'])
-    # @requires_auth(permission='post:services')
+    @requires_auth(permission='post:services')
     def add_services():
         request_data = request.get_json()
         if not request_data:
@@ -68,10 +70,12 @@ def create_app(database_path):
             print(e)
             abort(422)
 
-    # edit service categories, administrator only
-    # requires administrator permission
+    '''
+    edit service categories, administrator only
+    requires administrator permission
+    '''
     @app.route('/services/<int:service_id>', methods=['PATCH'])
-    # @requires_auth(permission='patch:services')
+    @requires_auth(permission='patch:services')
     def edit_service(service_id):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
@@ -94,10 +98,12 @@ def create_app(database_path):
         except:
             abort(422)
 
-    # delete service category (by name), administrator only
-    # requires administrator permission
+    '''
+    delete service category (by name), administrator only
+    requires administrator permission
+    '''
     @app.route('/services/<int:service_id>', methods=['DELETE'])
-    # @requires_auth(permission='delete:services')
+    @requires_auth(permission='delete:services')
     def delete_service(service_id):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
@@ -125,7 +131,9 @@ def create_app(database_path):
         except Exception as e:
             abort(422)
 
-    # search photographers
+    '''
+    search photographers
+    '''
     @app.route('/photographers')
     def search_photographers():
         service_id = request.args.get('service')
@@ -176,8 +184,10 @@ def create_app(database_path):
         else:
             abort(400)
 
-    # get details of a photographer
-    @app.route('/photographer-details/<int:photographer_id>')
+    '''
+    get details of a photographer
+    '''
+    @app.route('/photographers/<int:photographer_id>')
     def view_photographer_details(photographer_id):
         photographer_query = Photographer.query.\
             filter(Photographer.id == photographer_id).one_or_none()
@@ -187,15 +197,37 @@ def create_app(database_path):
         else:
             price_query = photographer_query.prices[0]
             price_data = price_query.format()
-            print(price_data)
+            if photographer_query.photos:
+                photos = [photo.format() for photo in photographer_query.photos]
+            else:
+                photos = []
             
             return jsonify({
                 'success': True,
                 'photographer': photographer_query.details(),
-                'prices': price_data
+                'prices': price_data,
+                'photos': photos
             })
             
-    # when signing in as a photographer, temporary helper function to find the matching photographer acount
+    '''
+    add a photographer, to be completed
+    '''
+    @app.route('/photographers', methods=['POST'])
+    def create_photographer():
+        request_body = request.get_json()
+        name = request_body.get('name')
+        email = request_body.get('email')
+        new_photographer = Photographer(name, email)
+        new_photographer.insert()
+        return jsonify({
+            'success': True,
+            'photographer': new_photographer.overview()
+        })
+            
+    '''
+    when signing in as a photographer
+    temporary helper function to find the matching photographer acount
+    '''
     @app.route('/photographer-accounts', methods=['GET'])
     def find_photographer_account():
         email = request.args.get('email')     
@@ -214,22 +246,11 @@ def create_app(database_path):
                 'photographer_id': photographer_id
             })
 
-    # add a photographer, to be completed
-    @app.route('/photographers', methods=['POST'])
-    def create_photographer():
-        request_body = request.get_json()
-        name = request_body.get('name')
-        email = request_body.get('email')
-        new_photographer = Photographer(name, email)
-        new_photographer.insert()
-        return jsonify({
-            'success': True,
-            'photographer': new_photographer.overview()
-        })
-
-    # edit photographer
-    # this endpoint requires authentication
-    @app.route('/photographers/<int:photographer_id>', methods=['GET', 'PATCH'])
+    '''
+    edit photographer
+    this endpoint requires authentication
+    '''
+    @app.route('/photographer-edits/<int:photographer_id>', methods=['GET', 'PATCH'])
     # @requires_auth()
     def update_photographer(photographer_id):
         photographer = Photographer.query.filter(
@@ -292,10 +313,12 @@ def create_app(database_path):
             except:
                 abort(422)
 
-    # delete the photographer
-    # this endpoint requires authentication
+    '''
+    delete the photographer
+    this endpoint requires authentication
+    '''
     @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    # @requires_auth()
+    # @requires_auth(permission='delete:photographers')
     def delete_photographer(photographer_id):
         photographer = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
@@ -317,25 +340,27 @@ def create_app(database_path):
         except:
             abort(422)
 
-    @app.route('/photographers/<int:photographer_id>/photos')
-    def get_photos(photographer_id):
-        photographer = Photographer.query.filter(
-            Photographer.id == photographer_id).one_or_none()
-        if not photographer:
-            abort(404)
+    # @app.route('/photographers/<int:photographer_id>/photos')
+    # def get_photos(photographer_id):
+    #     photographer = Photographer.query.filter(
+    #         Photographer.id == photographer_id).one_or_none()
+    #     if not photographer:
+    #         abort(404)
 
-        if photographer.photos:
-            photos = [photo.format() for photo in photographer.photos]
-        else:
-            photos = []
+    #     if photographer.photos:
+    #         photos = [photo.format() for photo in photographer.photos]
+    #     else:
+    #         photos = []
 
-        return jsonify({
-            'success': True,
-            'photos': photos
-        })
+    #     return jsonify({
+    #         'success': True,
+    #         'photos': photos
+    #     })
 
-    # upload photo
-    # this endpoint requires authentication
+    '''
+    upload photo
+    this endpoint requires authentication
+    '''
     @app.route('/photos/<int:photographer_id>', methods=['GET', 'POST'])
     def upload_photos(photographer_id):
         app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -412,9 +437,11 @@ def create_app(database_path):
         #         return redirect(request.url)
 
 
-    # delete a photo from a photographers' gallery
-    # this endpoint requires authentication
-    @app.route('/photographers/<int:photographer_id>/photos', methods=['DELETE'])
+    '''
+    delete a photo from a photographers' gallery
+    this endpoint requires authentication
+    '''
+    @app.route('/photos/<int:photographer_id>', methods=['DELETE'])
     # @requires_auth()
     def delete_photos(photographer_id):
         photographer = Photographer.query.filter(
@@ -443,8 +470,9 @@ def create_app(database_path):
         else:
             abort(404)
             
-    # error handling
-
+    '''
+    error handling
+    '''
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({

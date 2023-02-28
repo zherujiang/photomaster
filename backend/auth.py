@@ -117,7 +117,7 @@ def decode_verify_jwt(token):
     # raise exception when rsa_key is None
     raise AuthError(
         {
-            'code': 'incalid_token_header',
+            'code': 'invalid_token_header',
             'description': 'Unable to find the appropriate key.'
         }, 400
     )
@@ -155,4 +155,4 @@ def requires_auth(permission=''):
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
         return wrapper
-    return requires_auth
+    return requires_auth_decorator
