@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import LoginButton from '../components/LoginButton';
 import LogoutButton from '../components/LogoutButton';
 
-class Layout extends Component {
+class NavPhotographer extends Component {
     navTo(uri) {
         window.location.href = window.location.origin + uri;
     }
@@ -37,4 +37,4 @@ class Layout extends Component {
 
 }
 
-export default Layout;
+export default NavPhotographer;

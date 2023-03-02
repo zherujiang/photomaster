@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import LoginButton from '../components/LoginButton';
 
 class LandingView extends Component {
     navTo(uri) {
@@ -19,10 +20,7 @@ class LandingView extends Component {
                             <p className='mt-3'>Find the best photographers near you</p>
                         </div>
                         <div className='col-md-6 border-1 border-start py-4'>
-                            <button type='button' className='btn btn-outline-primary'
-                                onClick={() => {
-                                    this.navTo('/join')
-                                }}>Join as a Photographer</button>
+                            <LoginButton />
                             <p className='mt-3'>Join today and start meeting your customers</p>
                         </div>
                     </div>

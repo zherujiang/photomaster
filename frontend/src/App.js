@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './views/Layout';
+import NavPhotographer from './views/NavPhotographer';
 import LandingView from './views/LandingView';
 import SignUp from './views/SignUp';
 import LogIn from './views/LogIn';
