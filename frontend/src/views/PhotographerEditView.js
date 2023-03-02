@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
 
 function PhotographerEditView(props) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [photographerId, setPhotographerId] = useState(location.state.photographerId);
+    // const [photographerId, setPhotographerId] = useState(location.state.photographerId);
+    const { photographerId } = useParams();
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
     const [priceData, setPriceData] = useState(undefined);

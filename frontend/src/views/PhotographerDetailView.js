@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
 import PhotoSlides from '../components/PhotoSlides';
 
 function PhotographerDetailView(props) {
     const navigate = useNavigate();
     const location = useLocation();
-    const [photographerId, setPhotographerId] = useState(location.state.photographerId);
+
+    const { photographerId } = useParams();
     const [allServices, setAllServices] = useState(location.state.allServices);
     const [requestService, setRequestService] = useState(location.state.selectedService);
 

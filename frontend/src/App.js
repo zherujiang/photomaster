@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Layout from './views/Layout';
+import Navbar from './views/Navbar';
 import NavPhotographer from './views/NavPhotographer';
 import LandingView from './views/LandingView';
 import SignUp from './views/SignUp';
@@ -17,15 +17,20 @@ class App extends Component {
       <div className='App'>
         <BrowserRouter>
           <Routes>
-            <Route path='/' element={<Layout />}>
+            <Route path='/' element={<Navbar />}>
               <Route index element={<LandingView />} />
               <Route path='/login' element={<LogIn />} />
               <Route path='/join' element={<SignUp />} />
               <Route path='/search' element={<SearchView />} />
               <Route path='/searchresults' element={<SearchResultsView />} />
-              <Route path='/photographer' element={<PhotographerDetailView />} />
-              <Route path='/my-account' element={<PhotographerAccountView />} />
-              <Route path='/photographer-edit' element={<PhotographerEditView />} />
+              <Route path='/photographers'>
+                <Route path=':photographerId' element={<PhotographerDetailView />} />
+              </Route>
+            </Route>
+
+            <Route path='/user' element={<NavPhotographer />}>
+              <Route path=':photographerId' element={<PhotographerAccountView />} />
+              <Route path=':photographerId/edit' element={<PhotographerEditView />} />
             </Route>
           </Routes>
         </BrowserRouter>

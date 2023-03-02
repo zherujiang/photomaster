@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link, useParams } from 'react-router-dom';
 
 function PhotographerAccountView() {
     const location = useLocation();
     const navigate = useNavigate();
-    const [photographerId, setPhotographerId] = useState(location.state.photographerId);
+    const { photographerId } = useParams();
+    console.log(photographerId);
+    // const [photographerId, setPhotographerId] = useState(location.state.photographerId);
 
     useEffect(() => {
         // if (location.state) {
@@ -41,7 +43,7 @@ function PhotographerAccountView() {
                     <div className='col col-12 col-md-5'>
                         <h5>Profile</h5>
                         <p>Manage your account details.</p>
-                        <button type='button' className='btn btn-link p-0' onClick={handleEditProfile}>Edit profile</button>
+                        <Link to='edit'>Edit profile</Link>
                     </div>
                     <div className='col col-12 col-md-5'>
                         <h5>Photos</h5>

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import LoginButton from '../components/LoginButton';
 import LogoutButton from '../components/LogoutButton';
 
-function NavPhotographer() {
+function Navbar() {
     function navTo(uri) {
         window.location.href = window.location.origin + uri;
     }
@@ -19,10 +19,11 @@ function NavPhotographer() {
                     <div className="collapse navbar-collapse" id="navbarNavivation">
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                             <li className="nav-item">
-                                <a className="nav-link active" aria-current="page" href="/">Home</a>
+                                <a className="nav-link active" aria-current="page" href="/search">Search</a>
                             </li>
                         </ul>
                         <form className="d-flex">
+                            <LoginButton />
                             <LogoutButton />
                         </form>
                     </div>
@@ -34,4 +35,4 @@ function NavPhotographer() {
 
 }
 
-export default NavPhotographer;
+export default Navbar;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import PhotographerSearchDisplay from '../components/PhotographerSearchDisplay';
 import Pagination from '../components/Pagination'
 import axios from "axios";
