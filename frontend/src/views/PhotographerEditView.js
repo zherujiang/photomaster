@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
 
 function PhotographerEditView(props) {
     const navigate = useNavigate();
-    const location = useLocation();
 
-    // const [photographerId, setPhotographerId] = useState(location.state.photographerId);
     const { photographerId } = useParams();
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
@@ -101,11 +99,7 @@ function PhotographerEditView(props) {
     }
 
     function navigateBackToAccount() {
-        navigate('/my-account', {
-            state: {
-                'photographerId': photographerId
-            }
-        })
+        navigate('/account')
     }
 
     function handleInputChange(event) {

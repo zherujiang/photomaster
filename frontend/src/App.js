@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './views/Navbar';
-import NavPhotographer from './views/NavPhotographer';
 import LandingView from './views/LandingView';
-import SignUp from './views/SignUp';
-import LogIn from './views/LogIn';
 import SearchView from './views/SearchView';
 import SearchResultsView from './views/SearchResultsView';
 import PhotographerDetailView from './views/PhotographerDetailView';
@@ -19,18 +16,16 @@ class App extends Component {
           <Routes>
             <Route path='/' element={<Navbar />}>
               <Route index element={<LandingView />} />
-              <Route path='/login' element={<LogIn />} />
-              <Route path='/join' element={<SignUp />} />
               <Route path='/search' element={<SearchView />} />
               <Route path='/searchresults' element={<SearchResultsView />} />
               <Route path='/photographers'>
                 <Route path=':photographerId' element={<PhotographerDetailView />} />
               </Route>
-            </Route>
-
-            <Route path='/user' element={<NavPhotographer />}>
-              <Route path=':photographerId' element={<PhotographerAccountView />} />
-              <Route path=':photographerId/edit' element={<PhotographerEditView />} />
+              <Route path='/account'>
+                <Route index element={<PhotographerAccountView />} />
+                <Route path=':photographerId/edits' element={<PhotographerEditView />} />
+                {/* <Route path=':photographerId/photos' element={} /> */}
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>

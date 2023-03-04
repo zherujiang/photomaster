@@ -223,14 +223,43 @@ def create_app(database_path):
             'success': True,
             'photographer': new_photographer.overview()
         })
-            
+        
+    '''
+    delete the photographer
+    this endpoint requires authentication
+    '''
+    @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
+    # @requires_auth(permission='delete:photographers')
+    def delete_photographer(photographer_id):
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
+        if not photographer:
+            abort(404)
+
+        # check if the user making the request is the registered photographer
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
+
+        deleted_photographer = photographer.overview()
+
+        try:
+            photographer.delete()
+            return jsonify({
+                'success': True,
+                'photographer': deleted_photographer
+            })
+        except:
+            abort(422)
+
+
     '''
     when signing in as a photographer
     temporary helper function to find the matching photographer acount
     '''
-    @app.route('/photographer-accounts', methods=['GET'])
+    @app.route('/photographer-accounts', methods=['POST'])
     def find_photographer_account():
-        email = request.args.get('email')     
+        request_body = request.get_json()
+        email = request_body.get('email')
         photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
         
         if not photographer_query:
@@ -240,10 +269,12 @@ def create_app(database_path):
             })
         else:
             photographer_id = photographer_query.id
+            photographer_name = photographer_query.name
             
             return jsonify({
                 'success': True,
-                'photographer_id': photographer_id
+                'photographer_id': photographer_id,
+                'photographer_name': photographer_name
             })
 
     '''
@@ -312,50 +343,6 @@ def create_app(database_path):
                 })
             except:
                 abort(422)
-
-    '''
-    delete the photographer
-    this endpoint requires authentication
-    '''
-    @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    # @requires_auth(permission='delete:photographers')
-    def delete_photographer(photographer_id):
-        photographer = Photographer.query.filter(
-            Photographer.id == photographer_id).one_or_none()
-        if not photographer:
-            abort(404)
-
-        # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
-
-        deleted_photographer = photographer.overview()
-
-        try:
-            photographer.delete()
-            return jsonify({
-                'success': True,
-                'photographer': deleted_photographer
-            })
-        except:
-            abort(422)
-
-    # @app.route('/photographers/<int:photographer_id>/photos')
-    # def get_photos(photographer_id):
-    #     photographer = Photographer.query.filter(
-    #         Photographer.id == photographer_id).one_or_none()
-    #     if not photographer:
-    #         abort(404)
-
-    #     if photographer.photos:
-    #         photos = [photo.format() for photo in photographer.photos]
-    #     else:
-    #         photos = []
-
-    #     return jsonify({
-    #         'success': True,
-    #         'photos': photos
-    #     })
 
     '''
     upload photo
