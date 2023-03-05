@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
-function PhotographerEditView(props) {
+function PhotographerEditForm(props) {
     const navigate = useNavigate();
+    const { photographerId } = props;
 
-    const { photographerId } = useParams();
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
-    const [priceData, setPriceData] = useState(undefined);
+    const [prices, setPrices] = useState(undefined);
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ function PhotographerEditView(props) {
     const [portfolioLink, setPortfolioLink] = useState('');
     const [bio, setBio] = useState('');
     const [offeredServices, setOfferedServices] = useState([]);
-    const [prices, setPrices] = useState([]);
+    const [priceValues, setPriceValues] = useState([]);
     const [priceTypes, setPriceTypes] = useState([]);
 
     // server request to get all service categories
@@ -39,8 +39,8 @@ function PhotographerEditView(props) {
         axios.get(`/photographer-edits/${photographerId}`)
             .then(response => {
                 const data = response.data;
-                setPhotographerDetails(data['photographer']);
-                setPriceData(data['prices']);
+                setPhotographerDetails(data['photographer_details']);
+                setPrices(data['prices']);
             })
             .catch(function (error) {
                 console.log(error);
@@ -66,11 +66,11 @@ function PhotographerEditView(props) {
             setBio(photographerDetails.bio);
             setOfferedServices(photographerDetails.services);
         }
-        if (priceData) {
-            setPrices(priceData.prices);
-            setPriceTypes(priceData.price_types);
+        if (prices) {
+            setPriceValues(prices.price_values);
+            setPriceTypes(prices.price_types);
         }
-    }, [photographerDetails, priceData])
+    }, [photographerDetails, prices])
 
     // server request to submit photographer information updates
     function submitProfileUpdate() {
@@ -83,13 +83,13 @@ function PhotographerEditView(props) {
             'profile_photo': profilePhoto,
             'portfolio_link': portfolioLink,
             'bio': bio,
-            'prices': prices,
+            'price_values': priceValues,
             'price_types': priceTypes
         })
             .then(response => {
                 const data = response.data;
-                setPhotographerDetails(data['photographer']);
-                setPriceData(data['prices']);
+                setPhotographerDetails(data['photographer_details']);
+                setPrices(data['prices']);
 
                 navigateBackToAccount();
             })
@@ -136,9 +136,9 @@ function PhotographerEditView(props) {
             setOfferedServices(checkedServices);
 
             // reset price to 0 for the removed service
-            let newPrice = [...prices];
-            newPrice[serviceId - 1] = 0;
-            setPrices(newPrice);
+            let newPriceValues = [...priceValues];
+            newPriceValues[serviceId - 1] = 0;
+            setPriceValues(newPriceValues);
 
             // reset price type for the removed service
             let newPriceTypes = [...priceTypes];
@@ -146,7 +146,7 @@ function PhotographerEditView(props) {
             setPriceTypes(newPriceTypes);
 
         } else {
-            let checkedServices = offeredServices.slice();
+            let checkedServices = [...offeredServices];
             checkedServices.push(serviceId);
             setOfferedServices(checkedServices);
         }
@@ -157,9 +157,9 @@ function PhotographerEditView(props) {
         const priceId = parseInt(elementId[2]);
 
         if (elementId[1] == 'price') {
-            let newPrice = [...prices];
-            newPrice[priceId - 1] = parseFloat(event.target.value);
-            setPrices(newPrice);
+            let newPriceValues = [...priceValues];
+            newPriceValues[priceId - 1] = parseFloat(event.target.value);
+            setPriceValues(newPriceValues);
         } else {
             let newPriceTypes = [...priceTypes];
             newPriceTypes[priceId - 1] = parseInt(event.target.value);
@@ -188,11 +188,11 @@ function PhotographerEditView(props) {
     }
 
     return (
-        <div id='photographer-detail-view' className='container py-4'>
+        <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
                 {/* <AlertSaveSuccessful /> */}
             </div>
-            <div id='page-contents' className='row align-items-start my-3'>
+            <div id='form-contents' className='row align-items-start my-3'>
                 <div id='profile-info' className='col col-12 col-lg-8'>
                     <div id='photographer-details' className='row mb-3'>
                         <div className='col'>
@@ -258,7 +258,6 @@ function PhotographerEditView(props) {
                             </div>
                         </div>
                     </div>
-
                     <div id='service-prices' className='row mb-3'>
                         <div className='col'>
                             <h5 className='my-3'>Service and fees</h5>
@@ -275,7 +274,7 @@ function PhotographerEditView(props) {
                                         <div className={`input-group ${offeredServices.includes(category.id) ? 'visible' : 'invisible'}`}>
                                             <span className='input-group-text'>Price $</span>
                                             <input className='form-control' type='number' id={`service-price-${category.id}`}
-                                                value={prices[category.id - 1]} onChange={handlePriceChange} />
+                                                value={priceValues[category.id - 1]} onChange={handlePriceChange} />
                                             <select className='form-select' id={`price-model-${category.id}`}
                                                 value={priceTypes[category.id - 1]} onChange={handlePriceChange}>
                                                 <option value='0'>Select a price model</option>
@@ -294,7 +293,7 @@ function PhotographerEditView(props) {
                     <button type='button' className='btn btn-link my-2'>Update photo</button>
                 </div>
             </div>
-            <div id='page-actions' className='row justify-content-center mb-3'>
+            <div id='form-actions' className='row justify-content-center mb-3'>
                 <div className='col col-auto'>
                     <button className='btn btn-outline-primary' onClick={navigateBackToAccount}>Cancel</button>
                 </div>
@@ -306,4 +305,4 @@ function PhotographerEditView(props) {
     )
 }
 
-export default PhotographerEditView
+export default PhotographerEditForm

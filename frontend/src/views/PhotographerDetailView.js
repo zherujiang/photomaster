@@ -12,7 +12,7 @@ function PhotographerDetailView(props) {
     const [requestService, setRequestService] = useState(location.state.selectedService);
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
-    const [priceData, setPriceData] = useState(undefined);
+    const [prices, setPrices] = useState(undefined);
     const [photos, setPhotos] = useState([]);
 
     const [customerFirstName, setCustomerFirstName] = useState(undefined);
@@ -27,8 +27,8 @@ function PhotographerDetailView(props) {
         axios.get(`/photographers/${photographerId}`)
             .then(response => {
                 const data = response.data;
-                setPhotographerDetails(data['photographer']);
-                setPriceData(data['prices'])
+                setPhotographerDetails(data['photographer_details']);
+                setPrices(data['prices'])
                 setPhotos(data['photos'])
             })
             .catch(function (error) {
@@ -51,14 +51,14 @@ function PhotographerDetailView(props) {
 
     // draw service category & prices components
     function ServiceCategory(props) {
-        const { name, image, price, priceType } = props;
+        const { name, image, priceValue, priceType } = props;
         const priceModels = ['', 'Total', 'Per hour']
         return (
             <div className="col">
                 <img src={`../assets/${image}`} className='card-img-top rounded-circle' alt={`${image}`} />
                 <div className='card-body text-center py-2'>
                     <h6>{capitalizeFirstLetter(name.toLowerCase())}</h6>
-                    <p className='m-0'>{`$ ${price}`}</p>
+                    <p className='m-0'>{`$ ${priceValue}`}</p>
                     <p><small>{priceModels[priceType]}</small></p>
                 </div>
             </div>
@@ -68,6 +68,7 @@ function PhotographerDetailView(props) {
     // draw photographer details components
     function PhotographerInfo(props) {
         if (photographerDetails) {
+            // parse details information from the server response
             const name = photographerDetails.name;
             const city = photographerDetails.city;
             const address = photographerDetails.address;
@@ -79,8 +80,8 @@ function PhotographerDetailView(props) {
             const offeredServices = allServices.filter(
                 (element) => services.includes(element.id)
             );
-            const prices = priceData.prices;
-            const priceTypes = priceData.price_types;
+            const priceValues = prices.price_values;
+            const priceTypes = prices.price_types;
 
             return (
                 <div id='photographer-info' className='row justify-content-between align-items-start my-3'>
@@ -138,7 +139,7 @@ function PhotographerDetailView(props) {
                                         key={`service-category-${category.id}`}
                                         name={category.name}
                                         image={category.image_link}
-                                        price={prices[parseInt(category.id) - 1]}
+                                        priceValue={priceValues[parseInt(category.id) - 1]}
                                         priceType={priceTypes[parseInt(category.id) - 1]}
                                     />
                                 ))}

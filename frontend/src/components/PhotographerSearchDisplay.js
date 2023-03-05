@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import PhotoSlides from './PhotoSlides';
 
 function PhotographerSearchDisplay(props) {
-    const { id, name, city, canTravel, address, services, price, priceType, profilePhoto, photos, allServices, selectedService } = props;
+    const { id, name, city, canTravel, address, services, price, profilePhoto, photos, allServices, selectedService } = props;
     const priceModels = ['', 'Total', 'Per hour']
 
     // format services offered by this photographer
@@ -73,10 +73,10 @@ function PhotographerSearchDisplay(props) {
                 <div className='col col-12 col-sm-3'>
                     <div className='row justify-content-end mb-2'>
                         <div className='col col-auto'>
-                            <h5>{`$ ${price ? price : 'inquire for prices'}`}</h5>
+                            <h5>{`$ ${price ? price.price_value : 'inquire for prices'}`}</h5>
                         </div>
                         <div className='col col-auto'>
-                            <p>{priceModels[priceType]}</p>
+                            <p>{priceModels[price.price_type]}</p>
                         </div>
                     </div>
                     <div className='row'>

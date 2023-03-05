@@ -154,16 +154,14 @@ def create_app(database_path):
             search_results = []
             
             for photographer in photographer_query:
-                photo_preview = photographer.photos[:8]
+                photo_query = photographer.photos[:8]
                 price_query = photographer.prices[0]
-                price = price_query.prices[int(service_id) - 1]
-                price_type = price_query.price_types[int(service_id) - 1]
 
-                photos = [photo.format() for photo in photo_preview]
+                photos = [photo.format() for photo in photo_query]
+                price = price_query.format_by_service(service_id)
                 photographer_info = photographer.overview()
                 photographer_info['photos'] = photos
                 photographer_info['price'] = price
-                photographer_info['price_type'] = price_type
                 search_results.append(photographer_info)
                 
             # paginate search results and return
@@ -196,7 +194,8 @@ def create_app(database_path):
             abort(404)
         else:
             price_query = photographer_query.prices[0]
-            price_data = price_query.format()
+            prices = price_query.format()
+            
             if photographer_query.photos:
                 photos = [photo.format() for photo in photographer_query.photos]
             else:
@@ -204,8 +203,8 @@ def create_app(database_path):
             
             return jsonify({
                 'success': True,
-                'photographer': photographer_query.details(),
-                'prices': price_data,
+                'photographer_details': photographer_query.details(),
+                'prices': prices,
                 'photos': photos
             })
             
@@ -217,13 +216,45 @@ def create_app(database_path):
         request_body = request.get_json()
         name = request_body.get('name')
         email = request_body.get('email')
-        new_photographer = Photographer(name, email)
-        new_photographer.insert()
-        return jsonify({
-            'success': True,
-            'photographer': new_photographer.overview()
-        })
         
+        existing_photographer = Photographer.query.filter(Photographer.email == email).one_or_none()
+        
+        if not existing_photographer:
+            # initialize photographer and insert
+            try:
+                new_photographer = Photographer(name, email)
+                print(new_photographer.overview())
+                new_photographer.insert()
+                print('inserted')
+            except Exception as e:
+                print(e)
+                abort(400)
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Email already registered under an account'
+            })
+            
+        try:
+            photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
+            photographer_id = photographer_query.id
+            
+            # initialize price table for the new photographer
+            services_query = Service.query.order_by(Service.id).all()
+            num_services = len(services_query)
+            new_prices = Price(photographer_id, [0]*num_services, [0]*num_services)
+            new_prices.insert()
+            
+            return jsonify({
+                'success': True,
+                'photographer_id': photographer_id,
+            })
+        except Exception as e:
+            print(e)
+            print('fail to insert prices')
+            abort(422)
+
+
     '''
     delete the photographer
     this endpoint requires authentication
@@ -253,8 +284,7 @@ def create_app(database_path):
 
 
     '''
-    when signing in as a photographer
-    temporary helper function to find the matching photographer acount
+    helper function to check if an email has been registered as a photographer acount
     '''
     @app.route('/photographer-accounts', methods=['POST'])
     def find_photographer_account():
@@ -264,7 +294,8 @@ def create_app(database_path):
         
         if not photographer_query:
             return jsonify({
-                'success': False,
+                'success': True,
+                'account_registered': False,
                 'message': 'can not find matching account'
             })
         else:
@@ -273,6 +304,7 @@ def create_app(database_path):
             
             return jsonify({
                 'success': True,
+                'account_registered': True,
                 'photographer_id': photographer_id,
                 'photographer_name': photographer_name
             })
@@ -296,12 +328,12 @@ def create_app(database_path):
         if request.method == 'GET':
             # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
             price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
-            price_data = price_query.format()
+            prices= price_query.format()
 
             return jsonify({
                 'success': True,
-                'photographer': photographer.details(),
-                'prices': price_data
+                'photographer_details': photographer.details(),
+                'prices': prices
             })
         elif request.method == 'PATCH':
             try:
@@ -315,15 +347,15 @@ def create_app(database_path):
                 profile_photo = request_body.get('profile_photo')
                 portfolio_link = request_body.get('portfolio_link')
                 bio = request_body.get('bio')
-                prices = request_body.get('prices')
+                price_values = request_body.get('price_values')
                 price_types = request_body.get('price_types')
                            
                 # update price for the current photographer
                 price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
-                price_query.prices = prices
+                price_query.price_values = price_values
                 price_query.price_types = price_types
                 price_query.update()
-                price_data = price_query.format()
+                prices = price_query.format()
 
                 # update photographer information
                 photographer.name = name
@@ -338,8 +370,8 @@ def create_app(database_path):
 
                 return jsonify({
                     'success': True,
-                    'photographer': photographer.details(),
-                    'prices': price_data
+                    'photographer_details': photographer.details(),
+                    'prices': prices
                 })
             except:
                 abort(422)

@@ -5,8 +5,12 @@ import LandingView from './views/LandingView';
 import SearchView from './views/SearchView';
 import SearchResultsView from './views/SearchResultsView';
 import PhotographerDetailView from './views/PhotographerDetailView';
-import PhotographerAccountView from './views/PhotographerAccountView';
-import PhotographerEditView from './views/PhotographerEditView';
+import AccountView from './views/AccountView';
+// import AccountLoggedinView from './views/AccountLoggedinView';
+import EditProfileView from './views/EditProfileView';
+import InitializeProfileView from './views/InitializeProfileView';
+import ExceptionPage from './views/ExceptionPage';
+import NotFoundPage from './views/NotFoundPage';
 
 class App extends Component {
   render() {
@@ -22,10 +26,14 @@ class App extends Component {
                 <Route path=':photographerId' element={<PhotographerDetailView />} />
               </Route>
               <Route path='/account'>
-                <Route index element={<PhotographerAccountView />} />
-                <Route path=':photographerId/edits' element={<PhotographerEditView />} />
+                <Route index element={<AccountView />} />
+                {/* <Route path=':photographerId' element={<AccountLoggedinView />} /> */}
+                <Route path=':photographerId/edits' element={<EditProfileView />} />
+                <Route path=':photographerId/initialize' element={<InitializeProfileView />} />
                 {/* <Route path=':photographerId/photos' element={} /> */}
               </Route>
+              <Route path='/exception' element={<ExceptionPage />} />
+              <Route path='*' element={<NotFoundPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

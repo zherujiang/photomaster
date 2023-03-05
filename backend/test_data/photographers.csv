@@ -9,3 +9,4 @@ id;name;email;city;can_travel;services;profile_photo;addres;portfolio_link;bio
 8;Mayxiaozhou;mayxz@gmail.com;New York;true;"{2,3,4,5}";;;;Photographer from Guang Zhou, 90s, currently in New York
 9;Loya;loya@gmail.com;Log Angeles;false;"{2,3,4}";;;;Weddings, family and pregancy photos, located in Bay Area.
 10;Ava;ava@gmail.com;Los Angeles;false;"{4}";;San Jose Studio;;Photography for new-borns, family and pregnancy.
+11;Cheryl;cheryl.zjiang@gmail.com;Chicago;false;"{2,3}";;1234 Lynwood Drive;;An awesome photographer.

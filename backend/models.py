@@ -56,7 +56,7 @@ class Photographer(db.Model):
     email = Column(String(120), nullable=False)
     city = Column(String(120))
     can_travel = Column(Boolean, nullable=False, default=False)
-    services = Column(db.ARRAY(Integer, dimensions=1))
+    services = Column(db.ARRAY(Integer, dimensions=1), nullable=False, default=[])
     profile_photo = Column(String(255))
     address = Column(String(255))
     portfolio_link = Column(String(255))
@@ -72,6 +72,11 @@ class Photographer(db.Model):
     def __init__(self, name, email):
         self.name = name
         self.email = email
+        self.city = ''
+        self.profile_photo= ''
+        self.address = ''
+        self.portfolio_link = ''
+        self.bio = ''
 
     def overview(self):
         return {
@@ -145,23 +150,32 @@ class Price(db.Model):
     __tablename__ = 'prices'
     photographer_id = Column(db.ForeignKey(
         'photographers.id', ondelete='CASCADE'), primary_key=True)
-    prices = Column(db.ARRAY(db.Float, dimensions=1), nullable=False)
+    price_values = Column(db.ARRAY(db.Float, dimensions=1), nullable=False)
     price_types = Column(db.ARRAY(Integer, dimensions=1), nullable=False)
 
     # relationships
     photographer = db.relationship('Photographer', back_populates='prices')
 
     # methods
-    def __init__(self, photographer_id, prices, price_types):
+    def __init__(self, photographer_id, price_values, price_types):
         self.photographer_id = photographer_id
-        self.prices = prices
-        self.price = price_types
+        self.price_values = price_values
+        self.price_types = price_types
 
     def format(self):
         return {
             'photographer_id': self.photographer_id,
-            'prices': self.prices,
+            'price_values': self.price_values,
             'price_types': self.price_types,
+        }
+    
+    def format_by_service(self, service_id):
+        price_value = self.price_values[int(service_id) - 1]
+        price_type = self.price_types[int(service_id) - 1]
+        return {
+            'service_id': service_id,
+            'price_value': price_value,
+            'price_type': price_type
         }
 
     def insert(self):

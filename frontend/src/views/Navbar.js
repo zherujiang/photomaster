@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import LoginButton from '../components/LoginButton';
+import LogoutButton from '../components/LogoutButton';
 import { useAuth0 } from '@auth0/auth0-react';
 
 function Navbar() {
@@ -14,9 +15,17 @@ function Navbar() {
 
     function UserNavOption() {
         if (user) {
-            return <NavLink className='nav-link' to='/account'>My Account</NavLink>
+            return (
+                <div className="d-flex">
+                    <NavLink className='nav-link' to='/account'>My Account</NavLink>
+                </div>
+            )
         } else {
-            return <LoginButton />
+            return (
+                <div className="d-flex">
+                    <LoginButton />
+                </div>
+            )
         }
     }
 
@@ -38,9 +47,7 @@ function Navbar() {
                                 <NavLink className='nav-link' to='/search'>Search</NavLink>
                             </li>
                         </ul>
-                        <div className="d-flex">
-                            <UserNavOption />
-                        </div>
+                        <UserNavOption />
                     </div>
                 </div>
             </nav>
