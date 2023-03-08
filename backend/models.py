@@ -120,22 +120,25 @@ class Photo(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     photographer_id = Column(db.ForeignKey(
         'photographers.id', ondelete='CASCADE'), primary_key=True)
-    filename = Column(String(255), nullable=False)
+    file_location = Column(String(255), nullable=False)
 
     # relationships
     photographer = db.relationship('Photographer', back_populates='photos')
 
     # methods
-    def __init__(self, photographer_id, filename):
+    def __init__(self, photographer_id, file_location):
         self.photographer_id = photographer_id
-        self.filename = filename
+        self.file_location = file_location
 
     def format(self):
         return {
             'id': self.id,
             'photographer_id': self.photographer_id,
-            'filename': self.filename,
+            'filename': self.file_location,
         }
+    
+    def urls(self):
+        return self.file_location
 
     def insert(self):
         db.session.add(self)

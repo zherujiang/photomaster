@@ -9,6 +9,7 @@ import AccountView from './views/AccountView';
 // import AccountLoggedinView from './views/AccountLoggedinView';
 import EditProfileView from './views/EditProfileView';
 import InitializeProfileView from './views/InitializeProfileView';
+import EditPhotosView from './views/EditPhotosView';
 import ExceptionPage from './views/ExceptionPage';
 import NotFoundPage from './views/NotFoundPage';
 
@@ -30,7 +31,7 @@ class App extends Component {
                 {/* <Route path=':photographerId' element={<AccountLoggedinView />} /> */}
                 <Route path=':photographerId/edits' element={<EditProfileView />} />
                 <Route path=':photographerId/initialize' element={<InitializeProfileView />} />
-                {/* <Route path=':photographerId/photos' element={} /> */}
+                <Route path=':photographerId/photos' element={<EditPhotosView />} />
               </Route>
               <Route path='/exception' element={<ExceptionPage />} />
               <Route path='*' element={<NotFoundPage />} />

@@ -209,7 +209,7 @@ def create_app(database_path):
             })
             
     '''
-    add a photographer, to be completed
+    add a photographer
     '''
     @app.route('/photographers', methods=['POST'])
     def create_photographer():
@@ -377,12 +377,11 @@ def create_app(database_path):
                 abort(422)
 
     '''
-    upload photo
+    get photos of a photographer
     this endpoint requires authentication
     '''
-    @app.route('/photos/<int:photographer_id>', methods=['GET', 'POST'])
-    def upload_photos(photographer_id):
-        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    @app.route('/photos/<int:photographer_id>', methods=['GET'])
+    def get_photos(photographer_id):
         photographer = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer:
@@ -392,69 +391,53 @@ def create_app(database_path):
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
 
+        # return existing photos for the requested photographer
         if request.method == 'GET':
-            return redirect('upload_form.html')
-        
-        # testing code to test database insersion
-        else:
-            data = request.get_json()
-            file = data.get('file')
-            filename = file['filename']
+            photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+            photo_urls = [photo.urls() for photo in photo_query]
             
-            if file and filename:
-                try:
-                    new_photo = Photo(
-                        photographer_id,
-                        filename
-                    )
-                    new_photo.insert()
-                    
-                    return jsonify({
-                        'success': True,
-                        'photo': new_photo.format()
-                    })
-                    
-                except Exception as e:
-                    print(e)
-                    abort(422)
-            else:
+            return jsonify({
+                    'success': True,
+                    'photo_urls': photo_urls
+                })
+            
+    '''
+    upload photo
+    this endpoint requires authentication
+    '''
+    @app.route('/photos/<int:photographer_id>', methods=['POST'])
+    def upload_photos(photographer_id):
+        photographer = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
+        if not photographer:
+            abort(404)
+
+        # check if the user making the request is the registered photographer
+        # if payload.get('user_id') != photographer_id:
+        #     abort(401)
+        
+        data = request.get_json()
+        new_photos_list = data.get('new_photos_list')
+        
+        for file_location in new_photos_list:
+            try:
+                new_photo = Photo(
+                    photographer_id,
+                    file_location
+                )
+                new_photo.insert()
+            except Exception as e:
+                print(e)
                 abort(400)
                 
-        # else:
-        #     if 'file' not in request.files:
-        #         flash('No file part')
-        #         return redirect(request.url)
-
-        #     file = request.files['file']
-
-        #     if file.filename == '':
-        #         flash('No selected file')
-        #         return redirect(request.url)
-
-        #     if file and allowed_file(file.filename):
-        #         filename = secure_filename(file.filename)
-        #         image_path = os.path.join(
-        #             app.config['UPLOAD_FOLDER'], filename)
-        #         file.save(image_path)
-
-        #         try:
-        #             new_photo = Photo(
-        #                 photographer_id,
-        #                 image_path
-        #             )
-        #             new_photo.insert()
-
-        #             return jsonify({
-        #                 'success': True,
-        #                 'photo': new_photo.format()
-        #             })
-        #         except:
-        #             abort(422)
-
-        #     elif not allowed_file(file.filename):
-        #         flash('File name not allowed')
-        #         return redirect(request.url)
-
+        photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+        updated_photo_urls = [photo.urls() for photo in photo_query]
+        
+        return jsonify({
+            'success': True,
+            'photo_urls': updated_photo_urls
+        })
+        
 
     '''
     delete a photo from a photographers' gallery
@@ -465,30 +448,34 @@ def create_app(database_path):
     def delete_photos(photographer_id):
         photographer = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
+
         if not photographer:
             abort(404)
 
         # check if the user making the request is the registered photographer
         # if payload.get('user_id') != photographer_id:
         #     abort(401)
-
-        filename = request.args.get('filename')
-        photo_query = Photo.query.filter(
-            Photo.filename == filename).one_or_none()
-        if photo_query:
+        
+        data = request.get_json()
+        selected_photos_list = data.get('selected_photos_list')
+        
+        for photo_url in selected_photos_list:
             try:
-                deleted_photo = photo_query.format()
-                photo_query.delete()
-                return jsonify({
-                    'success': True,
-                    'photo': deleted_photo
-                })
+                photo_to_delete = Photo.query.filter(Photo.file_location == photo_url).one_or_none()
+                photo_to_delete.delete()
             except Exception as e:
                 print(e)
-                abort(422)
-        else:
-            abort(404)
-            
+                abort(400)
+        
+        photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+        updated_photo_urls = [photo.urls() for photo in photo_query]
+        
+        return jsonify({
+            'success': True,
+            'photo_urls': updated_photo_urls
+        })
+        
+
     '''
     error handling
     '''
