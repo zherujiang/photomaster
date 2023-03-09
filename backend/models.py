@@ -134,7 +134,7 @@ class Photo(db.Model):
         return {
             'id': self.id,
             'photographer_id': self.photographer_id,
-            'filename': self.file_location,
+            'file_location': self.file_location,
         }
     
     def urls(self):

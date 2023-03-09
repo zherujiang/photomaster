@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PhotoSlides from './PhotoSlides';
+import '../stylesheets/PhotoGrid.css'
 
 function PhotographerSearchDisplay(props) {
     const { id, name, city, canTravel, address, services, price, profilePhoto, photos, allServices, selectedService } = props;
@@ -28,8 +29,7 @@ function PhotographerSearchDisplay(props) {
         <div className='container-fluid border border-seconday mb-3'>
             <div className='row my-3'>
                 <div className='col col-4 col-sm-2'>
-                    {/* <img src={`../assets/${profilePhoto}`} className='rounded img-fluid' alt='photographer profile image' /> */}
-                    <img src='../assets/profile.jpg' className='rounded img-fluid' alt='photographer profile image' />
+                    <img src={profilePhoto} className='rounded w-100 square-image object-fit-cover' alt='photographer profile image' />
                 </div>
                 <div className='col col-8 col-sm-7'>
                     <div className='row justify-content-start'>

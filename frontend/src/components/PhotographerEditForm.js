@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import AWS from 'aws-sdk';
+import '../stylesheets/PhotoGrid.css'
+
+// environment config
+const BUCKET_NAME = 'photomasterbucket'
+
+AWS.config.update({
+    accessKeyId: 'AKIAQRJG34B24IU25SOJ',
+    secretAccessKey: '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',
+    region: 'us-west-2',
+    signatureVersion: 'v4',
+})
 
 function PhotographerEditForm(props) {
     const navigate = useNavigate();
     const { photographerId } = props;
+    const s3 = new AWS.S3();
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
@@ -21,6 +34,10 @@ function PhotographerEditForm(props) {
     const [offeredServices, setOfferedServices] = useState([]);
     const [priceValues, setPriceValues] = useState([]);
     const [priceTypes, setPriceTypes] = useState([]);
+
+    const [uploadStatus, setUploadStatus] = useState('Upload photo');
+    let newProfilePhotos = [];
+    let previousProfilePhotos = [];
 
     // server request to get all service categories
     function getServices() {
@@ -91,14 +108,16 @@ function PhotographerEditForm(props) {
                 setPhotographerDetails(data['photographer_details']);
                 setPrices(data['prices']);
 
-                navigateBackToAccount();
+                deleteUnusedProfilePhotos(previousProfilePhotos);
+                navigate('/account');
             })
             .catch(error => {
                 console.log(error);
             })
     }
 
-    function navigateBackToAccount() {
+    function cancelProfileUpdate() {
+        deleteUnusedProfilePhotos(newProfilePhotos);
         navigate('/account')
     }
 
@@ -166,6 +185,74 @@ function PhotographerEditForm(props) {
             setPriceTypes(newPriceTypes);
         }
     }
+
+    async function handleUploadProfilePhoto(e) {
+        if (e.target.files.length == 0) {
+            return;
+        }
+
+        setUploadStatus('Uploading');
+        // console.log('uploading', e.target.files);
+
+        let fileAttached = e.target.files[0];
+
+        // get the current profile photo file url and save it in the list for deletion
+        const lastUsedFileUrl = profilePhoto.split('.');
+        if (lastUsedFileUrl) {
+            const lastUsedFileName = lastUsedFileUrl[-2];
+            console.log(lastUsedFileName);
+            if (lastUsedFileName != 'profile_photo_default_1024') {
+                previousProfilePhotos.push(lastUsedFileUrl);
+            }
+        }
+
+        await uploadToS3(fileAttached);
+        setUploadStatus('Upload photo');
+    }
+
+    async function uploadToS3(file) {
+        if (!file) {
+            return;
+        }
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: `${Date.now()}.${file.name}`,
+            Body: file
+        }
+        const { Location } = await s3.upload(params).promise();
+        setProfilePhoto(Location);
+
+        newProfilePhotos.push(Location);
+        console.log('uploading to s3', Location);
+    }
+
+    async function deleteUnusedProfilePhotos(fileList) {
+        if (fileList.length == 0) {
+            return;
+        }
+
+        for (const photoURL of fileList) {
+            await deleteFromS3(photoURL);
+        }
+    }
+
+    async function deleteFromS3(photoURL) {
+        if (!photoURL) {
+            return;
+        }
+        const params = {
+            Bucket: BUCKET_NAME,
+            Key: photoURL.slice(photoURL.lastIndexOf('/') + 1),
+        }
+        s3.deleteObject(params, (err, data) => {
+            if (err) {
+                console.log(err, err.stack);
+            }
+            else {
+                console.log("deleted", photoURL);
+            }
+        });
+    };
 
     function AlertSaveSuccessful(response_status) {
         if (response_status = true) {
@@ -288,14 +375,17 @@ function PhotographerEditForm(props) {
                         </div>
                     </div>
                 </div>
-                <div id='profile-photo' className='col col-12 col-md-4 col-lg-2 text-center'>
-                    <img src='../assets/profile.jpg' className='rounded img-fluid object-fit-contain' alt='photographer profile image' />
-                    <button type='button' className='btn btn-link my-2'>Update photo</button>
+                <div id='profile-photo' className='col col-6 col-md-3 col-lg-2 text-center'>
+                    <img src={profilePhoto} className='rounded w-100 square-image object-fit-contain' alt='photographer profile image' />
+                    <label htmlFor="profile-photo-upload" className="btn btn-link my-2">
+                        {uploadStatus}
+                    </label>
+                    <input id="profile-photo-upload" type='file' hidden onChange={handleUploadProfilePhoto} />
                 </div>
             </div>
             <div id='form-actions' className='row justify-content-center mb-3'>
                 <div className='col col-auto'>
-                    <button className='btn btn-outline-primary' onClick={navigateBackToAccount}>Cancel</button>
+                    <button className='btn btn-outline-primary' onClick={cancelProfileUpdate}>Cancel</button>
                 </div>
                 <div className='col col-auto'>
                     <button className='btn btn-primary' onClick={submitProfileUpdate}>Save profile</button>

@@ -1,4 +1,5 @@
 import React from 'react';
+import '../stylesheets/PhotoGrid.css'
 
 function PhotoSlides(props) {
     const { photos, photoPerSlide, maxSlides } = props;
@@ -12,7 +13,7 @@ function PhotoSlides(props) {
         let photoList = [];
         for (let i = 0; i < photos.length; i++) {
             photoList.push(
-                <img key={photos[i].id} className='d-block' src={`../assets/${photos[i].filename}`} alt={photos[i].filename} />
+                <img key={photos[i].id} className='square-image d-block' src={photos[i].file_location} alt='photo by photographer' />
             )
         };
 

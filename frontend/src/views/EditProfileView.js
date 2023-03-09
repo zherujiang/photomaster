@@ -9,7 +9,7 @@ function EditProfileView(props) {
         <div id='edit-profile-view' className='container py-4'>
             <div className='row justify-content-center mt-2'>
                 <div className='col col-auto'>
-                    <h4>Edit Profile</h4>
+                    <h3>Edit Profile</h3>
                 </div>
             </div>
             <PhotographerEditForm photographerId={photographerId} />

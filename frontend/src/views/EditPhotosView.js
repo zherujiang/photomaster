@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk';
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from "axios";
 import '../stylesheets/PhotoGrid.css'
 
@@ -16,7 +16,6 @@ AWS.config.update({
 
 function EditPhotosView() {
     const { photographerId } = useParams();
-    const navigate = useNavigate();
     const s3 = new AWS.S3();
     const [existingPhotoURLs, setExistingPhotoURLs] = useState([]);
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
@@ -147,10 +146,10 @@ function EditPhotosView() {
         return (
             <div className='row row-cols-2 row-cols-sm-3 row-cols-lg-6 g-3'>
                 {existingPhotoURLs.map((url) => (
-                    <div className='col'>
+                    <div className='col' key={url}>
                         <img className={`w-100 square-image object-fit-cover 
                         ${selectedPhotos.includes(url) ? 'border border-2 border-danger' : ''}`}
-                            src={url} key={url} onClick={changeSelectedPhotos} />
+                            src={url} onClick={changeSelectedPhotos} />
                     </div>
                 ))}
             </div>
