@@ -11,10 +11,11 @@ function SearchResultsView(props) {
     const [selectedCity, setSelectedCity] = useState('');
     const [totalPhotographers, setTotalPhotographers] = useState(0);
     const [photographers, setPhotographers] = useState([]);
+    const [acceptTravel, setAcceptTravel] = useState(false);
     const [maxPrice, setMaxPrice] = useState(1000);
     const [resultsPerPage, setResultsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortBy, setSortBy] = useState(1);
+    const [sortBy, setSortBy] = useState('name');
 
     // server request to get all service categories
     function getServices() {
@@ -34,6 +35,8 @@ function SearchResultsView(props) {
             params: {
                 service: service,
                 location: city,
+                can_travel: acceptTravel,
+                sort_by: sortBy,
                 results_per_page: resultsPerPage,
                 current_page: currentPage
             }
@@ -57,6 +60,10 @@ function SearchResultsView(props) {
         setSelectedCity(event.target.value);
     }
 
+    function handleToggleTravel(event) {
+        setAcceptTravel(!acceptTravel);
+    }
+
     function submitSearch() {
         findPhotographers();
     }
@@ -67,6 +74,7 @@ function SearchResultsView(props) {
 
     function handleSelectSortBy(event) {
         setSortBy(event.target.value);
+        console.log(sortBy);
     }
 
     function handleSelectResultsPerPage(event) {
@@ -102,7 +110,7 @@ function SearchResultsView(props) {
         if (selectedService && selectedCity) {
             findPhotographers();
         }
-    }, [currentPage, resultsPerPage])
+    }, [currentPage, resultsPerPage, acceptTravel, sortBy])
 
     return (
         <div id='search-results-view' className='py-3'>
@@ -140,7 +148,7 @@ function SearchResultsView(props) {
                         <div className='border border-seconday p-3'>
                             <div id='travel-option' className='mb-3 py-2'>
                                 <div className='form-check'>
-                                    <input className='form-check-input' type='checkbox' id='flexibleLocation' />
+                                    <input className='form-check-input' type='checkbox' id='flexibleLocation' onChange={handleToggleTravel} />
                                     <label className='form-check-label' htmlFor='flexibleLocation'>Accept travel (photographers)</label>
                                 </div>
                             </div>
@@ -159,10 +167,10 @@ function SearchResultsView(props) {
                             <div className='col col-4'>
                                 <div className='input-group'>
                                     <label className='input-group-text' htmlFor='sortBy'>Sort by</ label>
-                                    <select value={1} className='form-select' id='sortBy' onChange={handleSelectSortBy}>
-                                        <option value={1}>A to Z</option>
-                                        <option value={2}>price low to high</option>
-                                        <option value={3}>price high to low</option>
+                                    <select value={sortBy} className='form-select' id='sortBy' onChange={handleSelectSortBy}>
+                                        <option value={'name'}>A to Z</option>
+                                        <option value={'price_up'}>price low to high</option>
+                                        <option value={'price_down'}>price high to low</option>
                                     </select>
                                 </div>
                             </div>
