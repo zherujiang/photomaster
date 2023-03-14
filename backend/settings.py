@@ -7,6 +7,7 @@ DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
 UPLOAD_FOLDER = '../frontend/assets/photo_gallery'
+UPLOAD_BUCKET_NAME = os.environ.get('UPLOAD_BUCKET_NAME')
 ALLOWED_EXTENSIONS = {'jpg', 'png', 'jpeg'}
 
 AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')

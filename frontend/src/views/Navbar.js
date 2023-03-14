@@ -1,17 +1,10 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import LoginButton from '../components/LoginButton';
-import LogoutButton from '../components/LogoutButton';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAccessToken } from '../services/AuthService';
 
 function Navbar() {
-    const { user, getAccessTokenSilently } = useAuth0();
-    let accessToken = '';
-
-    async function getToken() {
-        accessToken = await getAccessTokenSilently();
-        console.log('token', accessToken);
-    }
+    const { user } = useAccessToken();
 
     function UserNavOption() {
         if (user) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccessToken } from '../services/AuthService';
 import axios from "axios";
 import AWS from 'aws-sdk';
 import '../stylesheets/PhotoGrid.css'
@@ -39,6 +40,17 @@ function PhotographerEditForm(props) {
     let newProfilePhotos = [];
     let previousProfilePhotos = [];
 
+    const { loadLocalJWT, JWTReady } = useAccessToken();
+
+    function getAuthHeader() {
+        const authHeader = {
+            headers: {
+                'Authorization': `Bearer ${loadLocalJWT()}`
+            }
+        }
+        return authHeader
+    }
+
     // server request to get all service categories
     function getServices() {
         axios.get('/services')
@@ -53,7 +65,8 @@ function PhotographerEditForm(props) {
 
     // server request to get photographer information to render the form
     function getPhotographerForm(photographer_id = photographerId) {
-        axios.get(`/photographer-edits/${photographerId}`)
+        axios.get(
+            `/photographer-edits/${photographerId}`, getAuthHeader())
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
@@ -66,9 +79,11 @@ function PhotographerEditForm(props) {
 
     // initial render
     useEffect(() => {
-        getServices();
-        getPhotographerForm();
-    }, [])
+        if (JWTReady) {
+            getServices();
+            getPhotographerForm();
+        }
+    }, [JWTReady])
 
     // update information after edits
     useEffect(() => {

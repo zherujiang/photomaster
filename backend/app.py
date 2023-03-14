@@ -336,6 +336,7 @@ def create_app(database_path):
 
         if request.method == 'GET':
             # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
+            print(request.headers)
             price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
             prices= price_query.format()
 

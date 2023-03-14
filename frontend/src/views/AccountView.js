@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAccessToken } from '../services/AuthService';
 import LogoutButton from '../components/LogoutButton';
 import axios from "axios";
 
@@ -10,19 +10,26 @@ function AccountView() {
     const [photographerName, setPhotographerName] = useState('');
     const [accountRegistered, setAccountRegistered] = useState(undefined);
 
-    const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
-    let accessToken = '';
+    const { loadLocalJWT, JWTReady, user } = useAccessToken();
 
-    async function getToken() {
-        accessToken = await getAccessTokenSilently();
-        // console.log('token', accessToken);
+    function getAuthHeader() {
+        const authHeader = {
+            headers: {
+                'Authorization': `Bearer ${loadLocalJWT()}`
+            }
+        }
+        return authHeader
     }
 
     // server request to check if the account is alreay registered
     function findPhotographerAccount() {
-        axios.post('/photographer-accounts', {
-            email: user.email
-        })
+        axios.post(
+            '/photographer-accounts',
+            {
+                email: user.email
+            },
+            getAuthHeader()
+        )
             .then(response => {
                 const data = response.data;
                 if (data['account_registered']) {
@@ -40,10 +47,14 @@ function AccountView() {
 
     // server request to create a new photographer account
     function createNewPhotographer() {
-        axios.post('/photographers', {
-            name: user.nickname,
-            email: user.email
-        })
+        axios.post(
+            '/photographers',
+            {
+                name: user.nickname,
+                email: user.email
+            },
+            getAuthHeader()
+        )
             .then(response => {
                 const data = response.data;
                 if (data['photographer_id']) {
@@ -60,27 +71,19 @@ function AccountView() {
         navigate(`/account/${userId}/initialize`)
     }
 
-    // function navigateToMyAccount() {
-    //     navigate(`/account/${photographerId}`)
-    // }
-
     useEffect(() => {
-        if (user) {
-            getToken();
+        if (user && JWTReady) {
             findPhotographerAccount();
         }
-    }, [user])
+    }, [user, JWTReady])
 
     useEffect(() => {
         if (accountRegistered === false) {
             createNewPhotographer();
         }
-        // } else if (accountRegistered === true) {
-        //     navigateToMyAccount();
-        // }
     }, [accountRegistered])
 
-    if (isLoading) {
+    if (!JWTReady) {
         return (
             <div id='myAccount'>
                 <div className='container py-4'>
@@ -92,7 +95,7 @@ function AccountView() {
         )
     }
 
-    if (isAuthenticated && accountRegistered) {
+    if (JWTReady && accountRegistered) {
         return (
             <div id='myAccount'>
                 <div className='container py-4'>
