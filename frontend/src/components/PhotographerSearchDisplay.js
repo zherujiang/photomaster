@@ -12,17 +12,20 @@ function PhotographerSearchDisplay(props) {
         (element) => services.includes(element.id)
     );
 
-    // helper function to format photographer names
+    // helper function to format words intotitle case
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
-    function capitalizeName(string) {
+    function titleCase(string) {
         const words = string.split(' ');
-        let photographerName = '';
+        let titleCasedString = '';
         for (let i = 0; i < words.length; i++) {
-            photographerName += capitalizeFirstLetter(words[i])
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
         }
-        return photographerName;
+        return titleCasedString;
     }
 
     return (
@@ -33,10 +36,10 @@ function PhotographerSearchDisplay(props) {
                 </div>
                 <div className='col col-8 col-sm-7'>
                     <div className='row justify-content-start'>
-                        <h5>{capitalizeName(name)}</h5>
+                        <h5>{titleCase(name)}</h5>
                     </div>
                     <div className='row justify-content-start mb-1'>
-                        <div className='col col-auto'>{city}</div>
+                        <div className='col col-auto'>{titleCase(city)}</div>
                         <div className='col col-auto'>
                             <span className={address ? 'visible' : 'invisible'}>
                                 Address: {address}

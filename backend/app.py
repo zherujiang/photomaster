@@ -10,7 +10,8 @@ from auth import requires_auth, AuthError
 def find_city(location):
     # A helper function to return a city based on the zip code entered
     if isinstance(location, str):
-        return location
+        # print(location.lower())
+        return location.lower()
     else:
         return 'placeholder_City'
 
@@ -86,7 +87,7 @@ def create_app(database_path):
             abort(400)
 
         try:
-            service_query.name = request_data.get('name')
+            service_query.name = request_data.get('name').lower()
             service_query.image_link = request_data.get('image_link')
             service_query.update()
 
@@ -392,8 +393,8 @@ def create_app(database_path):
             prices = price_query.format()
 
             # update photographer information
-            photographer_query.name = name
-            photographer_query.city = city
+            photographer_query.name = name.lower()
+            photographer_query.city = city.lower()
             photographer_query.can_travel = can_travel
             photographer_query.address = address
             photographer_query.services = services

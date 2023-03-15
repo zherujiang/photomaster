@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import '../stylesheets/PhotoGrid.css'
 
 function SearchView(props) {
     const [services, setServices] = useState([]);
@@ -37,15 +38,31 @@ function SearchView(props) {
         })
     }
 
+    // helper function to format words intotitle case
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function titleCase(string) {
+        const words = string.split(' ');
+        let titleCasedString = '';
+        for (let i = 0; i < words.length; i++) {
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
+        }
+        return titleCasedString;
+    }
+
     function ServiceCategory(props) {
         const { id, name, image, selected } = props;
         return (
             <div className="col mb-3">
                 <div className={`card border-2 ${selected ? 'border-primary' : 'border-light-subtle'}`}
                     onClick={() => { handleSelectCategory(id) }}>
-                    <img src={`../assets/${image}`} className='card-img-top' alt={`${image}`} />
+                    <img src={`../assets/${image}`} className='card-img-top square-image object-fit-cover' alt={`${image}`} />
                     <div className='card-body'>
-                        <h6 className='card-title'>{name.toLowerCase()}</h6>
+                        <h6 className='card-title'>{titleCase(name)}</h6>
                     </div>
                 </div>
             </div>

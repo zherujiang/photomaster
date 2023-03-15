@@ -44,9 +44,20 @@ function PhotographerDetailView(props) {
         setRequestService(event.target.value);
     }
 
-    // helper function to capitalize names
+    // helper function to format words into title case
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function titleCase(string) {
+        const words = string.split(' ');
+        let titleCasedString = '';
+        for (let i = 0; i < words.length; i++) {
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
+        }
+        return titleCasedString;
     }
 
     // draw service category & prices components
@@ -93,12 +104,12 @@ function PhotographerDetailView(props) {
                             <div className='col col-8 col-md-9'>
                                 <div className='row'>
                                     <div className='col col-auto'>
-                                        <h5>{capitalizeFirstLetter(name)}</h5>
+                                        <h5>{titleCase(name)}</h5>
                                     </div>
                                 </div>
                                 <div className='row'>
                                     <div className='col col-auto'>
-                                        <h6>{city}</h6>
+                                        <h6>{titleCase(city)}</h6>
                                     </div>
                                 </div>
                                 <div className='row'>

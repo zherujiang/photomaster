@@ -285,11 +285,6 @@ function PhotographerEditForm(props) {
         }
     }
 
-    // helper function to capitalize names
-    function capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
     return (
         <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
@@ -305,7 +300,7 @@ function PhotographerEditForm(props) {
                                 </div>
                                 <div className='col col-12 col-md-9'>
                                     <input className='form-control' type='text' id='nameInput'
-                                        name='name' value={capitalizeFirstLetter(name)} onChange={handleInputChange} />
+                                        name='name' value={name} onChange={handleInputChange} />
                                 </div>
                             </div>
                             <div className='row mb-3'>

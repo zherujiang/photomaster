@@ -148,8 +148,12 @@ function SearchResultsView(props) {
                         <div className='border border-seconday p-3'>
                             <div id='travel-option' className='mb-3 py-2'>
                                 <div className='form-check'>
+                                    <input className='form-check-input' type='checkbox' id='defaultLocation' checked disabled />
+                                    <label className='form-check-label' htmlFor='defaultLocation'>Local photographers</label>
+                                </div>
+                                <div className='form-check'>
                                     <input className='form-check-input' type='checkbox' id='flexibleLocation' onChange={handleToggleTravel} />
-                                    <label className='form-check-label' htmlFor='flexibleLocation'>Accept travel (photographers)</label>
+                                    <label className='form-check-label' htmlFor='flexibleLocation'>Traveling photographers</label>
                                 </div>
                             </div>
                             <div id='slide-container' className='mb-3'>
