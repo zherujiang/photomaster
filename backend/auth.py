@@ -20,8 +20,8 @@ def get_token_auth_header():
              'description': 'Authorization header is expected.'
             }, 401
         )
-    
-    header_parts = auth_header.split['']
+
+    header_parts = auth_header.split(' ')
     
     if header_parts[0].lower() != 'bearer':
         raise AuthError(
@@ -137,14 +137,18 @@ def check_permissions(permission, payload):
             }, 400
         )
     
-    if permission not in payload['permissions']:
-        raise AuthError(
-            {
-                'code': 'unauthorized',
-                'description': 'Permission not found'
-            }, 403
-        )
-    return True
+    if not permission:
+        # return true if the endpoint doesn't require a permission
+        return True
+    elif permission and permission not in payload['permissions']:
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Permission not found'
+                }, 403
+            )
+    else:
+        return True
 
 def requires_auth(permission=''):
     def requires_auth_decorator(f):

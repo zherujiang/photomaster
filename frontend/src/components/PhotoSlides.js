@@ -13,7 +13,7 @@ function PhotoSlides(props) {
         let photoList = [];
         for (let i = 0; i < photos.length; i++) {
             photoList.push(
-                <img key={photos[i].id} className='square-image d-block' src={photos[i].file_location} alt='photo by photographer' />
+                <img key={photos[i].id} className='square-image object-fit-cover d-block' src={photos[i].file_location} alt='photo by photographer' />
             )
         };
 

@@ -1,5 +1,5 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export function useAccessToken() {
     const JWTS_LOCAL_KEY = 'JWTS_LOCAL_KEY';
@@ -26,5 +26,14 @@ export function useAccessToken() {
         }
     }, [user])
 
-    return { loadLocalJWT, JWTReady, user, resetLocalJWT }
+    function buildAuthHeader() {
+        const authHeader = {
+            headers: {
+                'Authorization': `Bearer ${loadLocalJWT()}`
+            }
+        }
+        return authHeader
+    }
+
+    return { loadLocalJWT, JWTReady, buildAuthHeader, user, resetLocalJWT }
 }

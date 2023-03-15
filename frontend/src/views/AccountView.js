@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccessToken } from '../services/AuthService';
+import { useAccessToken } from '../hooks/AuthHook';
 import LogoutButton from '../components/LogoutButton';
 import axios from "axios";
 
@@ -10,34 +10,24 @@ function AccountView() {
     const [photographerName, setPhotographerName] = useState('');
     const [accountRegistered, setAccountRegistered] = useState(undefined);
 
-    const { loadLocalJWT, JWTReady, user } = useAccessToken();
-
-    function getAuthHeader() {
-        const authHeader = {
-            headers: {
-                'Authorization': `Bearer ${loadLocalJWT()}`
-            }
-        }
-        return authHeader
-    }
+    const { JWTReady, buildAuthHeader, user } = useAccessToken();
 
     // server request to check if the account is alreay registered
     function findPhotographerAccount() {
-        axios.post(
-            '/photographer-accounts',
-            {
-                email: user.email
-            },
-            getAuthHeader()
-        )
+        axios.get(
+            '/photographer-accounts', buildAuthHeader())
             .then(response => {
                 const data = response.data;
-                if (data['account_registered']) {
+                if (data['account_registered'] === true) {
+                    // console.log('account_registered?', data['account_registered']);
                     setAccountRegistered(true);
                     setPhotographerId(data['photographer_id']);
                     setPhotographerName(data['photographer_name']);
-                } else {
+                } else if (data['account_registered'] === false) {
+                    // console.log('account_registered?', data['account_registered']);
                     setAccountRegistered(false);
+                } else {
+                    navigate('/exception');
                 }
             })
             .catch(function (error) {
@@ -53,7 +43,7 @@ function AccountView() {
                 name: user.nickname,
                 email: user.email
             },
-            getAuthHeader()
+            buildAuthHeader()
         )
             .then(response => {
                 const data = response.data;

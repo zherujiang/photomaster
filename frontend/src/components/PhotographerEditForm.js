@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccessToken } from '../services/AuthService';
+import { useAccessToken } from '../hooks/AuthHook';
 import axios from "axios";
 import AWS from 'aws-sdk';
 import '../stylesheets/PhotoGrid.css'
@@ -40,16 +40,7 @@ function PhotographerEditForm(props) {
     let newProfilePhotos = [];
     let previousProfilePhotos = [];
 
-    const { loadLocalJWT, JWTReady } = useAccessToken();
-
-    function getAuthHeader() {
-        const authHeader = {
-            headers: {
-                'Authorization': `Bearer ${loadLocalJWT()}`
-            }
-        }
-        return authHeader
-    }
+    const { JWTReady, buildAuthHeader } = useAccessToken();
 
     // server request to get all service categories
     function getServices() {
@@ -66,7 +57,7 @@ function PhotographerEditForm(props) {
     // server request to get photographer information to render the form
     function getPhotographerForm(photographer_id = photographerId) {
         axios.get(
-            `/photographer-edits/${photographerId}`, getAuthHeader())
+            `/photographer-edits/${photographerId}`, buildAuthHeader())
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
@@ -106,24 +97,31 @@ function PhotographerEditForm(props) {
 
     // server request to submit photographer information updates
     function submitProfileUpdate() {
-        axios.patch(`/photographer-edits/${photographerId}`, {
-            'name': name,
-            'city': city,
-            'can_travel': canTravel,
-            'address': address,
-            'services': offeredServices,
-            'profile_photo': profilePhoto,
-            'portfolio_link': portfolioLink,
-            'bio': bio,
-            'price_values': priceValues,
-            'price_types': priceTypes
-        })
+        axios.patch(
+            `/photographer-edits/${photographerId}`,
+            {
+                'name': name,
+                'city': city,
+                'can_travel': canTravel,
+                'address': address,
+                'services': offeredServices,
+                'profile_photo': profilePhoto,
+                'portfolio_link': portfolioLink,
+                'bio': bio,
+                'price_values': priceValues,
+                'price_types': priceTypes
+            },
+            buildAuthHeader()
+        )
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
                 setPrices(data['prices']);
 
-                deleteUnusedProfilePhotos(previousProfilePhotos);
+                if (previousProfilePhotos) {
+                    deleteUnusedProfilePhotos(previousProfilePhotos);
+                    previousProfilePhotos = [];
+                }
                 navigate('/account');
             })
             .catch(error => {
@@ -132,7 +130,10 @@ function PhotographerEditForm(props) {
     }
 
     function cancelProfileUpdate() {
-        deleteUnusedProfilePhotos(newProfilePhotos);
+        if (newProfilePhotos) {
+            deleteUnusedProfilePhotos(newProfilePhotos);
+            newProfilePhotos = [];
+        }
         navigate('/account')
     }
 
@@ -215,7 +216,7 @@ function PhotographerEditForm(props) {
         const lastUsedFileUrl = profilePhoto.split('.');
         if (lastUsedFileUrl) {
             const lastUsedFileName = lastUsedFileUrl[-2];
-            console.log(lastUsedFileName);
+            // console.log(lastUsedFileName);
             if (lastUsedFileName != 'profile_photo_default_1024') {
                 previousProfilePhotos.push(lastUsedFileUrl);
             }
@@ -264,7 +265,7 @@ function PhotographerEditForm(props) {
                 console.log(err, err.stack);
             }
             else {
-                console.log("deleted", photoURL);
+                console.log("deleted from S3", photoURL);
             }
         });
     };

@@ -21,6 +21,7 @@ def paginate_search_results(selection, results_per_page, current_page):
     current_photographers = selection[start:end]
     return current_photographers
 
+# helper function to access the price values of a photographer
 def get_service_price(photographer):
     return photographer['price']['price_value']
 
@@ -46,7 +47,7 @@ def create_app(database_path):
     '''
     @app.route('/services', methods=['POST'])
     @requires_auth(permission='post:services')
-    def add_services():
+    def add_services(payload):
         request_data = request.get_json()
         if not request_data:
             abort(400)
@@ -74,7 +75,7 @@ def create_app(database_path):
     '''
     @app.route('/services/<int:service_id>', methods=['PATCH'])
     @requires_auth(permission='patch:services')
-    def edit_service(service_id):
+    def edit_service(payload, service_id):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
         if not service_query:
@@ -97,12 +98,12 @@ def create_app(database_path):
             abort(422)
 
     '''
-    delete service category (by name), administrator only
+    delete service category (by service id), administrator only
     requires administrator permission
     '''
     @app.route('/services/<int:service_id>', methods=['DELETE'])
     @requires_auth(permission='delete:services')
-    def delete_service(service_id):
+    def delete_service(payload, service_id):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
         if not service_query:
@@ -221,47 +222,45 @@ def create_app(database_path):
     add a photographer
     '''
     @app.route('/photographers', methods=['POST'])
-    def create_photographer():
+    @requires_auth()
+    def create_photographer(payload):
         request_body = request.get_json()
         name = request_body.get('name')
         email = request_body.get('email')
         
+        authenticated_user_email = payload.get('https://photomaster.com/email')       
+        if email != authenticated_user_email:
+            # authenticated user is not the owner of the email sent with the request body
+            abort(403)
+        
         existing_photographer = Photographer.query.filter(Photographer.email == email).one_or_none()
         
         if not existing_photographer:
-            # initialize photographer and insert
             try:
+                # initialize photographer and insert
                 new_photographer = Photographer(name, email)
-                print(new_photographer.overview())
                 new_photographer.insert()
-                print('inserted')
+                
+                # check if the new photographer is successfully inserted and get the new photographer id
+                photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
+                photographer_id = photographer_query.id
+                
+                # initialize price table for the new photographer
+                services_query = Service.query.order_by(Service.id).all()
+                num_services = len(services_query)
+                new_prices = Price(photographer_id, [0]*num_services, [0]*num_services)
+                new_prices.insert()
+                
+                return jsonify({
+                    'success': True,
+                    'photographer_id': photographer_id,
+                })       
             except Exception as e:
                 print(e)
                 abort(400)
         else:
-            return jsonify({
-                'success': False,
-                'message': 'Email already registered under an account'
-            })
-            
-        try:
-            photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
-            photographer_id = photographer_query.id
-            
-            # initialize price table for the new photographer
-            services_query = Service.query.order_by(Service.id).all()
-            num_services = len(services_query)
-            new_prices = Price(photographer_id, [0]*num_services, [0]*num_services)
-            new_prices.insert()
-            
-            return jsonify({
-                'success': True,
-                'photographer_id': photographer_id,
-            })
-        except Exception as e:
-            print(e)
-            print('fail to insert prices')
-            abort(422)
+            # photographer account already exists
+            abort(403)
 
 
     '''
@@ -269,21 +268,23 @@ def create_app(database_path):
     this endpoint requires authentication
     '''
     @app.route('/photographers/<int:photographer_id>', methods=['DELETE'])
-    # @requires_auth(permission='delete:photographers')
-    def delete_photographer(photographer_id):
-        photographer = Photographer.query.filter(
+    @requires_auth(permission='delete:photographers')
+    def delete_photographer(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
-        if not photographer:
+        if not photographer_query:
             abort(404)
 
-        # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
 
-        deleted_photographer = photographer.overview()
+        deleted_photographer = photographer_query.details()
 
         try:
-            photographer.delete()
+            photographer_query.delete()
             return jsonify({
                 'success': True,
                 'photographer': deleted_photographer
@@ -295,17 +296,18 @@ def create_app(database_path):
     '''
     helper function to check if an email has been registered as a photographer acount
     '''
-    @app.route('/photographer-accounts', methods=['POST'])
-    def find_photographer_account():
-        request_body = request.get_json()
-        email = request_body.get('email')
-        photographer_query = Photographer.query.filter(Photographer.email == email).one_or_none()
+    @app.route('/photographer-accounts', methods=['GET'])
+    @requires_auth()
+    def find_photographer_account(payload):        
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        photographer_query = Photographer.query.filter(Photographer.email == authenticated_user_email).one_or_none()
         
         if not photographer_query:
             return jsonify({
                 'success': True,
                 'account_registered': False,
-                'message': 'can not find matching account'
+                'message': 'can not find account with the matching email'
             })
         else:
             photographer_id = photographer_query.id
@@ -319,112 +321,147 @@ def create_app(database_path):
             })
 
     '''
-    edit photographer
+    get photographer profile details for edit
     this endpoint requires authentication
     '''
-    @app.route('/photographer-edits/<int:photographer_id>', methods=['GET', 'PATCH'])
-    # @requires_auth()
-    def update_photographer(photographer_id):
-        photographer = Photographer.query.filter(
+    @app.route('/photographer-edits/<int:photographer_id>', methods=['GET'])
+    @requires_auth(permission='get:photographer-edits')
+    def edit_photographer(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
-        if not photographer:
+        if not photographer_query:
             abort(404)
 
         # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
 
-        if request.method == 'GET':
-            # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
-            print(request.headers)
+        # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
+        price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
+        prices= price_query.format()
+
+        return jsonify({
+            'success': True,
+            'photographer_details': photographer_query.details(),
+            'prices': prices
+        })
+                
+    '''
+    edit photographer
+    this endpoint requires authentication
+    '''
+    @app.route('/photographer-edits/<int:photographer_id>', methods=['PATCH'])
+    @requires_auth(permission='patch:photographer-edits')
+    def update_photographer(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
+            Photographer.id == photographer_id).one_or_none()
+        if not photographer_query:
+            abort(404)
+
+        # check if the user making the request is the registered photographer
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
+
+        try:
+            # parse data from the request
+            request_body = request.get_json()
+            name = request_body.get('name')
+            city = request_body.get('city')
+            can_travel = request_body.get('can_travel')
+            address = request_body.get('address')
+            services = request_body.get('services')
+            profile_photo = request_body.get('profile_photo')
+            portfolio_link = request_body.get('portfolio_link')
+            bio = request_body.get('bio')
+            price_values = request_body.get('price_values')
+            price_types = request_body.get('price_types')
+                        
+            # update price for the current photographer
             price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
-            prices= price_query.format()
+            price_query.price_values = price_values
+            price_query.price_types = price_types
+            price_query.update()
+            prices = price_query.format()
+
+            # update photographer information
+            photographer_query.name = name
+            photographer_query.city = city
+            photographer_query.can_travel = can_travel
+            photographer_query.address = address
+            photographer_query.services = services
+            photographer_query.profile_photo = profile_photo
+            photographer_query.portfolio_link = portfolio_link
+            photographer_query.bio = bio
+            photographer_query.update()
 
             return jsonify({
                 'success': True,
-                'photographer_details': photographer.details(),
+                'photographer_details': photographer_query.details(),
                 'prices': prices
             })
-        elif request.method == 'PATCH':
-            try:
-                # parse data from the request
-                request_body = request.get_json()
-                name = request_body.get('name')
-                city = request_body.get('city')
-                can_travel = request_body.get('can_travel')
-                address = request_body.get('address')
-                services = request_body.get('services')
-                profile_photo = request_body.get('profile_photo')
-                portfolio_link = request_body.get('portfolio_link')
-                bio = request_body.get('bio')
-                price_values = request_body.get('price_values')
-                price_types = request_body.get('price_types')
-                           
-                # update price for the current photographer
-                price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
-                price_query.price_values = price_values
-                price_query.price_types = price_types
-                price_query.update()
-                prices = price_query.format()
-
-                # update photographer information
-                photographer.name = name
-                photographer.city = city
-                photographer.can_travel = can_travel
-                photographer.address = address
-                photographer.services = services
-                photographer.profile_photo = profile_photo
-                photographer.portfolio_link = portfolio_link
-                photographer.bio = bio
-                photographer.update()
-
-                return jsonify({
-                    'success': True,
-                    'photographer_details': photographer.details(),
-                    'prices': prices
-                })
-            except:
-                abort(422)
+        except:
+            abort(422)
 
     '''
     get photos of a photographer
     this endpoint requires authentication
     '''
     @app.route('/photos/<int:photographer_id>', methods=['GET'])
-    def get_photos(photographer_id):
-        photographer = Photographer.query.filter(
+    @requires_auth(permission='get:photos')
+    def get_photos(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
-        if not photographer:
+        if not photographer_query:
             abort(404)
 
         # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
 
         # return existing photos for the requested photographer
-        if request.method == 'GET':
-            photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+        try:
+            photo_query = Photo.query.filter(Photo.photographer_id == photographer_query.id).order_by(Photo.id).all()
             photo_urls = [photo.urls() for photo in photo_query]
             
             return jsonify({
                     'success': True,
                     'photo_urls': photo_urls
                 })
+        except Exception as e:
+            print(e)
+            abort(422)
             
     '''
     upload photo
     this endpoint requires authentication
     '''
     @app.route('/photos/<int:photographer_id>', methods=['POST'])
-    def upload_photos(photographer_id):
-        photographer = Photographer.query.filter(
+    @requires_auth(permission='post:photos')
+    def upload_photos(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
-        if not photographer:
+        if not photographer_query:
             abort(404)
 
         # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
         
         data = request.get_json()
         new_photos_list = data.get('new_photos_list')
@@ -440,31 +477,35 @@ def create_app(database_path):
                 print(e)
                 abort(400)
                 
-        photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+        photo_query = Photo.query.filter(Photo.photographer_id == photographer_query.id).order_by(Photo.id).all()
         updated_photo_urls = [photo.urls() for photo in photo_query]
         
         return jsonify({
             'success': True,
             'photo_urls': updated_photo_urls
         })
-        
+
 
     '''
     delete a photo from a photographers' gallery
     this endpoint requires authentication
     '''
     @app.route('/photos/<int:photographer_id>', methods=['DELETE'])
-    # @requires_auth()
-    def delete_photos(photographer_id):
-        photographer = Photographer.query.filter(
+    @requires_auth(permission='delete:photos')
+    def delete_photos(payload, photographer_id):
+        photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
 
-        if not photographer:
+        if not photographer_query:
             abort(404)
 
         # check if the user making the request is the registered photographer
-        # if payload.get('user_id') != photographer_id:
-        #     abort(401)
+        photographer_email = photographer_query.email
+        authenticated_user_email = payload.get('https://photomaster.com/email')
+        
+        if photographer_email != authenticated_user_email:
+            # authenticated user is not the owner of the requested photographer account
+            abort(403)
         
         data = request.get_json()
         selected_photos_list = data.get('selected_photos_list')
@@ -477,7 +518,7 @@ def create_app(database_path):
                 print(e)
                 abort(400)
         
-        photo_query = Photo.query.filter(Photo.photographer_id == photographer.id).order_by(Photo.id).all()
+        photo_query = Photo.query.filter(Photo.photographer_id == photographer_query.id).order_by(Photo.id).all()
         updated_photo_urls = [photo.urls() for photo in photo_query]
         
         return jsonify({
@@ -497,13 +538,21 @@ def create_app(database_path):
             'message': 'bad request'
         }), 400
 
-    @app.errorhandler(401)
+    # @app.errorhandler(401)
+    # def unauthorized(error):
+    #     return jsonify({
+    #         'success': False,
+    #         'error': 401,
+    #         'message': 'unauthorized user'
+    #     }), 401
+    
+    @app.errorhandler(403)
     def unauthorized(error):
         return jsonify({
             'success': False,
-            'error': 401,
-            'message': 'unauthorized user'
-        }), 401
+            'error': 403,
+            'message': 'forbidden'
+        }), 403
 
     @app.errorhandler(404)
     def not_found(error):

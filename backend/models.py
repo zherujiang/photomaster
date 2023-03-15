@@ -53,7 +53,7 @@ class Photographer(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(120), nullable=False)
-    email = Column(String(120), nullable=False)
+    email = Column(String(120), nullable=False, unique=True)
     city = Column(String(120))
     can_travel = Column(Boolean, nullable=False, default=False)
     services = Column(db.ARRAY(Integer, dimensions=1), nullable=False, default=[])

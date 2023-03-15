@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import LoginButton from '../components/LoginButton';
-import { useAccessToken } from '../services/AuthService';
+import LogoutButton from '../components/LogoutButton';
+import { useAccessToken } from '../hooks/AuthHook';
 
 function Navbar() {
     const { user } = useAccessToken();

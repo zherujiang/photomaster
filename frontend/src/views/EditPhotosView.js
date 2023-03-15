@@ -1,6 +1,7 @@
 import AWS from 'aws-sdk';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAccessToken } from '../hooks/AuthHook'
 import axios from "axios";
 import '../stylesheets/PhotoGrid.css'
 
@@ -23,8 +24,11 @@ function EditPhotosView() {
     const [selectedPhotos, setSelectedPhotos] = useState([]);
     let newPhotosList = [];
 
+    const { loadLocalJWT, JWTReady, buildAuthHeader } = useAccessToken();
+
+    // Server request to get all existing photos from the database
     function getPhotosFromDatabase() {
-        axios.get(`/photos/${photographerId}`)
+        axios.get(`/photos/${photographerId}`, buildAuthHeader())
             .then(response => {
                 const data = response.data;
                 setExistingPhotoURLs(data['photo_urls']);
@@ -36,9 +40,13 @@ function EditPhotosView() {
 
     // Add photos in newPhotosList to database
     function addPhotosToDatabase() {
-        axios.post(`/photos/${photographerId}`, {
-            new_photos_list: newPhotosList
-        })
+        axios.post(
+            `/photos/${photographerId}`,
+            {
+                new_photos_list: newPhotosList
+            },
+            buildAuthHeader()
+        )
             .then(response => {
                 const data = response.data;
                 setExistingPhotoURLs(data['photo_urls'])
@@ -53,8 +61,12 @@ function EditPhotosView() {
         axios.delete(
             `/photos/${photographerId}`,
             {
-                data: { selected_photos_list: selectedPhotos }
-            })
+                data: { selected_photos_list: selectedPhotos },
+                headers: {
+                    'Authorization': `Bearer ${loadLocalJWT()}`
+                }
+            }
+        )
             .then(response => {
                 const data = response.data;
                 setExistingPhotoURLs(data['photo_urls'])
@@ -65,8 +77,10 @@ function EditPhotosView() {
     }
 
     useEffect(() => {
-        getPhotosFromDatabase();
-    }, [])
+        if (JWTReady) {
+            getPhotosFromDatabase();
+        }
+    }, [JWTReady])
 
     const uploadToS3 = async (file) => {
         if (!file) {
@@ -95,7 +109,7 @@ function EditPhotosView() {
                 console.log(err, err.stack);
             }
             else {
-                console.log("deleted", photoURL);
+                console.log("deleted from s3", photoURL);
             }
         });
     };
