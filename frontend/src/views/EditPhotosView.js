@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAccessToken } from '../hooks/AuthHook'
 import axios from "axios";
+import ErrorBoundary from '../components/ErrorBoundary';
 import '../stylesheets/PhotoGrid.css'
 
 // environment config
@@ -18,6 +19,8 @@ AWS.config.update({
 function EditPhotosView() {
     const { photographerId } = useParams();
     const s3 = new AWS.S3();
+    const [axiosError, setAxiosError] = useState(null);
+
     const [existingPhotoURLs, setExistingPhotoURLs] = useState([]);
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
     const [deleteStatus, setDeleteStatus] = useState('Delete selected photos');
@@ -34,6 +37,7 @@ function EditPhotosView() {
                 setExistingPhotoURLs(data['photo_urls']);
             })
             .catch(error => {
+                setAxiosError(error);
                 console.log(error);
             })
     }
@@ -52,7 +56,8 @@ function EditPhotosView() {
                 setExistingPhotoURLs(data['photo_urls'])
             })
             .catch(error => {
-                console.log(error)
+                setAxiosError(error);
+                console.log(error);
             })
     }
 
@@ -72,7 +77,8 @@ function EditPhotosView() {
                 setExistingPhotoURLs(data['photo_urls'])
             })
             .catch(error => {
-                console.log(error)
+                setAxiosError(error);
+                console.log(error);
             })
     }
 
@@ -170,29 +176,40 @@ function EditPhotosView() {
         )
     }
 
+    // when there is an axios error, throw the error to be handled by ErrorBoundary
+    const AxiosError = () => {
+        if (axiosError) {
+            throw axiosError;
+        }
+        return null
+    };
+
     return (
         <div id='edit-photos-view' className='container py-4'>
-            <div className='row'>
-                <div className='col col-auto'>
-                    <Link to='/account'>&lsaquo; Back to Account</Link>
+            <ErrorBoundary>
+                <AxiosError />
+                <div className='row'>
+                    <div className='col col-auto'>
+                        <Link to='/account'>&lsaquo; Back to Account</Link>
+                    </div>
                 </div>
-            </div>
-            <div className='row mb-3 text-center'>
-                <h3>Edit your photos</h3>
-                <div className='my-3'>
-                    <label htmlFor="file-upload" className="btn btn-primary">
-                        {uploadStatus}
-                    </label>
-                    <input id="file-upload" type='file' hidden onChange={handleUpload} multiple="multiple" />
+                <div className='row mb-3 text-center'>
+                    <h3>Edit your photos</h3>
+                    <div className='my-3'>
+                        <label htmlFor="file-upload" className="btn btn-primary">
+                            {uploadStatus}
+                        </label>
+                        <input id="file-upload" type='file' hidden onChange={handleUpload} multiple="multiple" />
+                    </div>
                 </div>
-            </div>
-            <PhotoGrid />
-            <div className='row mt-3 text-center'>
-                <div className='col my-3'>
-                    <button className='btn btn-danger' onClick={handleDelete}
-                        disabled={selectedPhotos.length > 0 ? false : true}>{deleteStatus}</button>
+                <PhotoGrid />
+                <div className='row mt-3 text-center'>
+                    <div className='col my-3'>
+                        <button className='btn btn-danger' onClick={handleDelete}
+                            disabled={selectedPhotos.length > 0 ? false : true}>{deleteStatus}</button>
+                    </div>
                 </div>
-            </div>
+            </ErrorBoundary>
         </div>
     )
 }

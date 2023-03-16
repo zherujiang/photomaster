@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
+import ErrorBoundary from '../components/ErrorBoundary';
 import PhotoSlides from '../components/PhotoSlides';
 
 function PhotographerDetailView(props) {
     const navigate = useNavigate();
     const location = useLocation();
+    const [axiosError, setAxiosError] = useState(null);
 
     const { photographerId } = useParams();
     const [allServices, setAllServices] = useState(location.state.allServices);
@@ -32,6 +34,7 @@ function PhotographerDetailView(props) {
                 setPhotos(data['photos'])
             })
             .catch(function (error) {
+                setAxiosError(error);
                 console.log(error);
             })
     }
@@ -232,36 +235,47 @@ function PhotographerDetailView(props) {
         getPhotographerDetails();
     }, [])
 
+    // when there is an axios error, throw the error to be handled by ErrorBoundary
+    const AxiosError = () => {
+        if (axiosError) {
+            throw axiosError;
+        }
+        return null
+    };
+
     return (
         <div id='photographer-detail-view' className='container py-4'>
-            <div className='row'>
-                <div className='col col-auto'>
-                    <button role='button' className='btn btn-link' onClick={handleBackToSearch}>&lsaquo; Back to Search</button>
+            <ErrorBoundary>
+                <AxiosError />
+                <div className='row'>
+                    <div className='col col-auto'>
+                        <button role='button' className='btn btn-link' onClick={handleBackToSearch}>&lsaquo; Back to Search</button>
+                    </div>
                 </div>
-            </div>
-            <PhotographerInfo />
-            <div id='photographer-gallery' className='row mb-3'>
-                <div className='col col-12'>
-                    <h5>Featured Gallery</h5>
-                    <div className='border rounded'>
-                        <div id='photo-carousel' className='carousel slide'>
-                            <PhotoSlides
-                                photos={photos}
-                                photoPerSlide={5}
-                                maxSlides={4}
-                            />
-                            <button className='carousel-control-prev' type='button' data-bs-target='photo-carousel' data-bs-slide='prev'>
-                                <span className='carousel-control-prev-icon' aria-hidden='true'></span>
-                                <span className='visually-hidden'>Previous</span>
-                            </button>
-                            <button className='carousel-control-next' type='button' data-bs-target='photo-carousel' data-bs-slide='next'>
-                                <span className='carousel-control-next-icon' aria-hidden='true'></span>
-                                <span className='visually-hidden'>Next</span>
-                            </button>
+                <PhotographerInfo />
+                <div id='photographer-gallery' className='row mb-3'>
+                    <div className='col col-12'>
+                        <h5>Featured Gallery</h5>
+                        <div className='border rounded'>
+                            <div id='photo-carousel' className='carousel slide'>
+                                <PhotoSlides
+                                    photos={photos}
+                                    photoPerSlide={5}
+                                    maxSlides={4}
+                                />
+                                <button className='carousel-control-prev' type='button' data-bs-target='photo-carousel' data-bs-slide='prev'>
+                                    <span className='carousel-control-prev-icon' aria-hidden='true'></span>
+                                    <span className='visually-hidden'>Previous</span>
+                                </button>
+                                <button className='carousel-control-next' type='button' data-bs-target='photo-carousel' data-bs-slide='next'>
+                                    <span className='carousel-control-next-icon' aria-hidden='true'></span>
+                                    <span className='visually-hidden'>Next</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </ErrorBoundary>
         </div>
     )
 }

@@ -12,8 +12,8 @@ def find_city(location):
     if isinstance(location, str):
         # print(location.lower())
         return location.lower()
-    else:
-        return 'placeholder_City'
+    elif location == None:
+        return None
 
 
 def paginate_search_results(selection, results_per_page, current_page):
@@ -174,7 +174,7 @@ def create_app(database_path):
             elif sort_by == 'price_down':
                 # sort search_results based on the service price high to low
                 search_results.sort(key=get_service_price, reverse=True)
-                
+
             # paginate search results and return
             photographers = paginate_search_results(search_results, results_per_page, current_page)
             
@@ -182,13 +182,6 @@ def create_app(database_path):
                 'success': True,
                 'total_photographers': len(search_results),
                 'photographers': photographers
-            })
-
-        elif city == None:
-            return jsonify({
-                'success': False,
-                'message': 'invalid city or zip code',
-                'error': 400
             })
         else:
             abort(400)
@@ -232,7 +225,12 @@ def create_app(database_path):
         authenticated_user_email = payload.get('https://photomaster.com/email')       
         if email != authenticated_user_email:
             # authenticated user is not the owner of the email sent with the request body
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 401
+            )
         
         existing_photographer = Photographer.query.filter(Photographer.email == email).one_or_none()
         
@@ -280,7 +278,12 @@ def create_app(database_path):
         authenticated_user_email = payload.get('https://photomaster.com/email')
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
 
         deleted_photographer = photographer_query.details()
 
@@ -339,7 +342,12 @@ def create_app(database_path):
         
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
 
         # get the price information for the current photographer, use query instead of relationship for prices to avoid instrumented list
         price_query = Price.query.filter(Price.photographer_id == photographer_id).one_or_none()
@@ -369,7 +377,12 @@ def create_app(database_path):
         
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
 
         try:
             # parse data from the request
@@ -429,7 +442,12 @@ def create_app(database_path):
         
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
 
         # return existing photos for the requested photographer
         try:
@@ -462,7 +480,12 @@ def create_app(database_path):
         
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
         
         data = request.get_json()
         new_photos_list = data.get('new_photos_list')
@@ -506,7 +529,12 @@ def create_app(database_path):
         
         if photographer_email != authenticated_user_email:
             # authenticated user is not the owner of the requested photographer account
-            abort(403)
+            raise AuthError(
+                {
+                    'code': 'unauthorized',
+                    'description': 'Resource not found'
+                }, 404
+            )
         
         data = request.get_json()
         selected_photos_list = data.get('selected_photos_list')
@@ -538,14 +566,6 @@ def create_app(database_path):
             'error': 400,
             'message': 'bad request'
         }), 400
-
-    # @app.errorhandler(401)
-    # def unauthorized(error):
-    #     return jsonify({
-    #         'success': False,
-    #         'error': 401,
-    #         'message': 'unauthorized user'
-    #     }), 401
     
     @app.errorhandler(403)
     def unauthorized(error):
@@ -592,7 +612,7 @@ def create_app(database_path):
         return jsonify({
             'success': False,
             'error': error.status_code,
-            'message': error.error
+            'message': error.error_message
         }), error.status_code
 
     return app

@@ -19,6 +19,7 @@ function PhotographerEditForm(props) {
     const navigate = useNavigate();
     const { photographerId } = props;
     const s3 = new AWS.S3();
+    const [axiosError, setAxiosError] = useState(null);
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
@@ -50,6 +51,7 @@ function PhotographerEditForm(props) {
                 setAllServices(data['services']);
             })
             .catch(function (error) {
+                setAxiosError(error);
                 console.log(error);
             })
     }
@@ -64,6 +66,7 @@ function PhotographerEditForm(props) {
                 setPrices(data['prices']);
             })
             .catch(function (error) {
+                setAxiosError(error);
                 console.log(error);
             })
     }
@@ -124,7 +127,8 @@ function PhotographerEditForm(props) {
                 }
                 navigate('/account');
             })
-            .catch(error => {
+            .catch(function (error) {
+                setAxiosError(error);
                 console.log(error);
             })
     }
@@ -283,6 +287,11 @@ function PhotographerEditForm(props) {
         } else {
             return null
         }
+    }
+
+    // throw error when an axios error occurs
+    if (axiosError) {
+        throw axiosError;
     }
 
     return (

@@ -7,8 +7,8 @@ from settings import AUTH0_DOMAIN, ALGORITHMS, API_AUDIENCE
 
 # AuthError Exception class, a standard way to communicate auth failure modes
 class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
+    def __init__(self, error_message, status_code):
+        self.error_message = error_message
         self.status_code = status_code
  
 # get authorization token from request header       
