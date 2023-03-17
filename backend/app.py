@@ -3,9 +3,41 @@ from flask import Flask, request, jsonify, abort, redirect, flash
 import requests
 from models import setup_db, Photographer, Service, Photo, Price
 from flask_cors import CORS
-from settings import UPLOAD_FOLDER, ALLOWED_EXTENSIONS, DB_PATH
+from settings import DB_PATH
 from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
+# from flask_mail import Mail, Message
+# from settings import MAIL_USERNAME, MAIL_PASSWORD
+import smtplib
+
+# send email to photographers using smtplib
+def smtplib_send(recipient, email):
+    customer_name = email.get('customer_name', 'Anonymous')
+    customer_email = email.get('customer_email', 'Not provided')
+    customer_phone = email.get('customer_phone', 'Not provided')
+    service_name = email.get('service_name', 'Not provided')
+    
+    sender = "Photomaster <photomaster@cheryl-jiang.com>"
+    receiver = f"A Test User <{recipient}>"
+
+    message = f"""\
+Subject: A customer is interested in your photography
+To: {receiver}
+From: {sender}
+
+Congratulations! A customer {customer_name} found you on Photomaster and is interested in working with you!
+{customer_name} is interested in your {service_name} photography. You can follow up with them using the provided customer contacts below:
+Customer Email: {customer_email}
+Cusomter Phone: {customer_phone}"""
+
+    try:
+        with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
+            server.login("cceaa5b31ffd1d", "1f9fd5996ea273")
+            server.sendmail(sender, receiver, message)
+    except Exception as e:
+        print(e)
+        
+    return 'Sent'
 
 # helper function to return a city based on the zip code entered
 def find_city(location):
@@ -43,10 +75,18 @@ def get_service_price(photographer):
 
 
 def create_app(database_path):
-
     app = Flask(__name__)
     setup_db(app, database_path)
     CORS(app)
+    
+    # mail service config (using mailtrap)
+    # mail = Mail(app)
+    # app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
+    # app.config['MAIL_PORT'] = 2525
+    # app.config['MAIL_USERNAME'] = MAIL_USERNAME
+    # app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+    # app.config['MAIL_USE_TLS'] = True
+    # app.config['MAIL_USE_SSL'] = False
 
     @app.route('/services')
     def get_services():
@@ -569,6 +609,45 @@ def create_app(database_path):
             'success': True,
             'photo_urls': updated_photo_urls
         })
+    
+    '''
+    send emails to photographers on behalf of customers
+    '''
+    @app.route('/emails', methods=['POST'])
+    def send_email():        
+        request_body = request.get_json()
+        # print('email request body', request_body)
+        
+        recipient = request_body.get('recipient')
+        email = request_body.get('email_details')
+        
+        print('recipient', recipient)
+        print('email', email)
+        
+        try:
+            smtplib_send(recipient, email)
+            return jsonify({
+                'success': True,
+                'email': 'Sent'
+            })
+        except:
+            abort(400)
+
+        # send email with mailtrap API
+        # mailtrap_url = "https://send.api.mailtrap.io/api/send"
+        # payload = "{\"from\":{\"email\":\"mailtrap@cheryl-jiang.com\",\"name\":\"Mailtrap Test\"},\"to\":[{\"email\":\"cheryl.zjiang@gmail.com\"}],\"subject\":\"You are awesome!\",\"text\":\"Congrats for sending test email with Mailtrap!\",\"category\":\"Integration Test\"}"
+        # headers = {
+        # "Authorization": "Bearer 49893c9b5e1ed214906a162219e2b55b",
+        # "Content-Type": "application/json"
+        # }
+        # response = requests.request("POST", mailtrap_url, headers=headers, data=payload)
+        
+        # send email with Flask-mail
+        # msg = Message('A customer is interested in your photography', sender = 'photomaster@cheryl-jiang.com', recipients = [recipient])
+        # msg.body = 'Congratulations! A customer found you on Photomaster and is interested in working with you!'
+        # print(msg)
+        # mail.send(msg)
+        # return 'Sent'
         
 
     '''

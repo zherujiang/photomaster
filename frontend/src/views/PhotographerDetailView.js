@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from "axios";
 import ErrorBoundary from '../components/ErrorBoundary';
+import PhotographerContactForm from '../components/PhotographerContactForm';
 import PhotoSlides from '../components/PhotoSlides';
 
 function PhotographerDetailView(props) {
@@ -11,18 +12,11 @@ function PhotographerDetailView(props) {
 
     const { photographerId } = useParams();
     const [allServices, setAllServices] = useState(location.state.allServices);
-    const [requestService, setRequestService] = useState(location.state.selectedService);
+    const selectedService = location.state.selectedService;
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [prices, setPrices] = useState(undefined);
     const [photos, setPhotos] = useState([]);
-
-    const [customerFirstName, setCustomerFirstName] = useState(undefined);
-    const [customerLastName, setCustomerLastName] = useState(undefined);
-    const [customerEmail, setCustomerEmail] = useState(undefined);
-    const [customerPhone, setCustomerPhone] = useState(undefined);
-    const [customerInterestedService, setCustomerInterestedService] = useState(undefined);
-    const [customerMessage, setCustomerMessage] = useState(undefined);
 
     // server request to get details about the selected photographer
     function getPhotographerDetails(photographer_id = photographerId) {
@@ -41,10 +35,6 @@ function PhotographerDetailView(props) {
 
     function handleBackToSearch() {
         navigate(-1);
-    }
-
-    function handleRequestService(event) {
-        setRequestService(event.target.value);
     }
 
     // helper function to format words into title case
@@ -84,6 +74,7 @@ function PhotographerDetailView(props) {
         if (photographerDetails) {
             // parse details information from the server response
             const name = photographerDetails.name;
+            const email = photographerDetails.email;
             const city = photographerDetails.city;
             const address = photographerDetails.address;
             const canTravel = photographerDetails.can_travel;
@@ -175,54 +166,10 @@ function PhotographerDetailView(props) {
                             </div>
                         </div>
                     </div>
-                    <div id='contact-form' className='col col-12 col-lg-3'>
-                        <form className='border rounded p-4'>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <h5>Contact Photographer</h5>
-                                </div>
-                            </div>
-                            <div className='row g-3 mb-3'>
-                                <div className='col'>
-                                    <input type="text" placeholder='First name' className="form-control" aria-label="First name" />
-                                </div>
-                                <div className='col'>
-                                    <input type="text" placeholder='Last name' className="form-control" aria-label="Last name" />
-                                </div>
-                            </div>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <input type="text" placeholder='Your email' className="form-control" aria-label="email" />
-                                </div>
-                            </div>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <input type="text" placeholder='Phone' className="form-control" aria-label="phone" />
-                                </div>
-                            </div>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <select className='form-select' value={requestService}
-                                        onChange={handleRequestService}>
-                                        {offeredServices.map((category) => (
-                                            <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <label htmlFor="custom-message" className="form-label">Message</label>
-                                    <textarea id='custom-message' className="form-control" rows="3"></textarea>
-                                </div>
-                            </div>
-                            <div className='row mb-3'>
-                                <div className='col'>
-                                    <button type='submit' className='btn btn-primary w-100'>Send</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                    <PhotographerContactForm
+                        selectedService={selectedService}
+                        offeredServices={offeredServices}
+                        photographerEmail={email} />
                 </div>
             )
         } else {
