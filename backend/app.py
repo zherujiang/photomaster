@@ -1,21 +1,36 @@
 import os
 from flask import Flask, request, jsonify, abort, redirect, flash
+import requests
 from models import setup_db, Photographer, Service, Photo, Price
 from flask_cors import CORS
 from settings import UPLOAD_FOLDER, ALLOWED_EXTENSIONS, DB_PATH
 from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
 
-
+# helper function to return a city based on the zip code entered
 def find_city(location):
-    # A helper function to return a city based on the zip code entered
+    zip_API_url = 'https://api.zippopotam.us/us/'
     if isinstance(location, str):
-        # print(location.lower())
-        return location.lower()
-    elif location == None:
+        if location.isdigit():
+            # the location parameter is numeric
+            if len(location) == 5:
+                # the location parameter looks like a 5-digt zipcode
+                request_url = zip_API_url + location
+                response = requests.get(request_url)
+                places_info = response.json().get('places')
+                if places_info:
+                    city = places_info[0].get('place name').lower()
+                return city
+            else:
+                # invalid zipcode format
+                return None
+        else:
+            # the location parameter is not numeric
+            return location.lower()
+    else:
         return None
 
-
+# helper function to paginate search results based on the No. of results per page and page number
 def paginate_search_results(selection, results_per_page, current_page):
     start = int(results_per_page) * (int(current_page) - 1)
     end = start + int(results_per_page)

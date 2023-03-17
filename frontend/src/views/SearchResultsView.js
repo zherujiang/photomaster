@@ -79,7 +79,6 @@ function SearchResultsView(props) {
 
     function handleSelectSortBy(event) {
         setSortBy(event.target.value);
-        console.log(sortBy);
     }
 
     function handleSelectResultsPerPage(event) {
@@ -130,31 +129,29 @@ function SearchResultsView(props) {
             <ErrorBoundary>
                 <AxiosError />
                 <div className='search-query my-3'>
-                    <form>
-                        <div className='row align-items-center justify-content-center'>
-                            <div className='col col-6 col-sm-5  mb-3'>
-                                <div className='input-group'>
-                                    <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
-                                    <select className='form-select' id='serviceCategory'
-                                        value={selectedService} onChange={handleSelectService}>
-                                        {services.map((category) => (
-                                            <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className='col col-6 col-sm-5 mb-3'>
-                                <div className='input-group'>
-                                    <label className='input-group-text' htmlFor='city'>Near</label>
-                                    <input type='text' className='form-control' id='city'
-                                        placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} aria-label='City' />
-                                </div>
-                            </div>
-                            <div className='col col-12 col-sm-2 mb-3 d-grid'>
-                                <button type='button' className='btn btn-primary' onClick={submitSearch}>Search</button>
+                    <div className='row align-items-center justify-content-center'>
+                        <div className='col col-6 col-sm-5  mb-3'>
+                            <div className='input-group'>
+                                <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
+                                <select className='form-select' id='serviceCategory'
+                                    value={selectedService} onChange={handleSelectService}>
+                                    {services.map((category) => (
+                                        <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-                    </form>
+                        <div className='col col-6 col-sm-5 mb-3'>
+                            <div className='input-group'>
+                                <label className='input-group-text' htmlFor='city'>Near</label>
+                                <input type='text' className='form-control' id='city'
+                                    placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} aria-label='City' />
+                            </div>
+                        </div>
+                        <div className='col col-12 col-sm-2 mb-3 d-grid'>
+                            <button type='button' className='btn btn-primary' onClick={submitSearch}>Search</button>
+                        </div>
+                    </div>
                 </div>
                 <div id='search-display' className='pt-3'>
                     <div className='row align-items-start'>
