@@ -27,3 +27,7 @@ if DB_USER or DB_PASSWORD:
 else:
     DB_PATH = 'postgresql://{}/{}'.format('localhost:5432', DB_NAME)
     DB_TEST_PATH = 'postgresql://{}/{}'.format('localhost:5432', DB_TEST_NAME)
+    
+ENV_DB_PATH = os.environ.get('DATABASE_URL', None)
+if ENV_DB_PATH is not None:
+    DB_PATH = ENV_DB_PATH
