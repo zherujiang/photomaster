@@ -614,13 +614,7 @@ def create_app(database_path):
 
     @app.route('/serve', methods=['GET'])
     def serve():
-        # abort(400)
-        
-        return jsonify({
-            'success': True,
-            'info': 'aaa'
-        })
-        # return send_from_directory(app.static_folder, 'index.html')
+        return send_from_directory(app.static_folder, 'index.html')
     
     '''
     send emails to photographers on behalf of customers
