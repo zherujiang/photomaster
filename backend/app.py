@@ -3,7 +3,7 @@ from flask.helpers import send_from_directory
 from flask import Flask, request, jsonify, abort, redirect, flash
 import requests
 from models import setup_db, Photographer, Service, Photo, Price
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from settings import DB_PATH
 from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
@@ -32,6 +32,7 @@ def create_app(database_path):
         return send_from_directory(app.static_folder, 'index.html')
 
     @app.route('/services')
+    @cross_origin()
     def get_services():
         services_query = Service.query.order_by(Service.id).all()
         services = [service.format() for service in services_query]
@@ -581,7 +582,7 @@ def create_app(database_path):
         # mailtrap_url = "https://send.api.mailtrap.io/api/send"
         # payload = "{\"from\":{\"email\":\"mailtrap@cheryl-jiang.com\",\"name\":\"Mailtrap Test\"},\"to\":[{\"email\":\"cheryl.zjiang@gmail.com\"}],\"subject\":\"You are awesome!\",\"text\":\"Congrats for sending test email with Mailtrap!\",\"category\":\"Integration Test\"}"
         # headers = {
-        # "Authorization": "Bearer 49893c9b5e1ed214906a162219e2b55b",
+        # "Authorization": "Bearer ",
         # "Content-Type": "application/json"
         # }
         # response = requests.request("POST", mailtrap_url, headers=headers, data=payload)
