@@ -11,69 +11,6 @@ from auth import requires_auth, AuthError
 # from settings import MAIL_USERNAME, MAIL_PASSWORD
 import smtplib
 
-# send email to photographers using smtplib
-def smtplib_send(recipient, email):
-    customer_name = email.get('customer_name', 'Anonymous')
-    customer_email = email.get('customer_email', 'Not provided')
-    customer_phone = email.get('customer_phone', 'Not provided')
-    service_name = email.get('service_name', 'Not provided')
-    
-    sender = "Photomaster <photomaster@cheryl-jiang.com>"
-    receiver = f"A Test User <{recipient}>"
-
-    message = f"""\
-Subject: A customer is interested in your photography
-To: {receiver}
-From: {sender}
-
-Congratulations! A customer {customer_name} found you on Photomaster and is interested in working with you!
-{customer_name} is interested in your {service_name} photography. You can follow up with them using the provided customer contacts below:
-Customer Email: {customer_email}
-Cusomter Phone: {customer_phone}"""
-
-    try:
-        with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
-            server.login("cceaa5b31ffd1d", "1f9fd5996ea273")
-            server.sendmail(sender, receiver, message)
-    except Exception as e:
-        print(e)
-        
-    return 'Sent'
-
-# helper function to return a city based on the zip code entered
-def find_city(location):
-    zip_API_url = 'https://api.zippopotam.us/us/'
-    if isinstance(location, str):
-        if location.isdigit():
-            # the location parameter is numeric
-            if len(location) == 5:
-                # the location parameter looks like a 5-digt zipcode
-                request_url = zip_API_url + location
-                response = requests.get(request_url)
-                places_info = response.json().get('places')
-                if places_info:
-                    city = places_info[0].get('place name').lower()
-                return city
-            else:
-                # invalid zipcode format
-                return None
-        else:
-            # the location parameter is not numeric
-            return location.lower()
-    else:
-        return None
-
-# helper function to paginate search results based on the No. of results per page and page number
-def paginate_search_results(selection, results_per_page, current_page):
-    start = int(results_per_page) * (int(current_page) - 1)
-    end = start + int(results_per_page)
-    current_photographers = selection[start:end]
-    return current_photographers
-
-# helper function to access the price values of a photographer
-def get_service_price(photographer):
-    return photographer['price']['price_value']
-
 
 def create_app(database_path):
     app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
@@ -88,6 +25,11 @@ def create_app(database_path):
     # app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
     # app.config['MAIL_USE_TLS'] = True
     # app.config['MAIL_USE_SSL'] = False
+    
+    # serve frontend React app
+    @app.route('/')
+    def serve():
+        return send_from_directory(app.static_folder, 'index.html')
 
     @app.route('/services')
     def get_services():
@@ -611,11 +553,6 @@ def create_app(database_path):
             'photo_urls': updated_photo_urls
         })
     
-
-    @app.route('/')
-    def serve():
-        return send_from_directory(app.static_folder, 'index.html')
-    
     '''
     send emails to photographers on behalf of customers
     '''
@@ -631,6 +568,7 @@ def create_app(database_path):
         print('email', email)
         
         try:
+            # send email with smtplib
             smtplib_send(recipient, email)
             return jsonify({
                 'success': True,
@@ -716,6 +654,70 @@ def create_app(database_path):
         }), error.status_code
 
     return app
+
+
+# send email to photographers using smtplib
+def smtplib_send(recipient, email):
+    customer_name = email.get('customer_name', 'Anonymous')
+    customer_email = email.get('customer_email', 'Not provided')
+    customer_phone = email.get('customer_phone', 'Not provided')
+    service_name = email.get('service_name', 'Not provided')
+    
+    sender = "Photomaster <photomaster@cheryl-jiang.com>"
+    receiver = f"A Test User <{recipient}>"
+
+    message = f"""\
+Subject: A customer is interested in your photography
+To: {receiver}
+From: {sender}
+
+Congratulations! A customer {customer_name} found you on Photomaster and is interested in working with you!
+{customer_name} is interested in your {service_name} photography. You can follow up with them using the provided customer contacts below:
+Customer Email: {customer_email}
+Cusomter Phone: {customer_phone}"""
+
+    try:
+        with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
+            server.login("cceaa5b31ffd1d", "1f9fd5996ea273")
+            server.sendmail(sender, receiver, message)
+    except Exception as e:
+        print(e)
+        
+    return 'Sent'
+
+# helper function to return a city based on the zip code entered
+def find_city(location):
+    zip_API_url = 'https://api.zippopotam.us/us/'
+    if isinstance(location, str):
+        if location.isdigit():
+            # the location parameter is numeric
+            if len(location) == 5:
+                # the location parameter looks like a 5-digt zipcode
+                request_url = zip_API_url + location
+                response = requests.get(request_url)
+                places_info = response.json().get('places')
+                if places_info:
+                    city = places_info[0].get('place name').lower()
+                return city
+            else:
+                # invalid zipcode format
+                return None
+        else:
+            # the location parameter is not numeric
+            return location.lower()
+    else:
+        return None
+
+# helper function to paginate search results based on the No. of results per page and page number
+def paginate_search_results(selection, results_per_page, current_page):
+    start = int(results_per_page) * (int(current_page) - 1)
+    end = start + int(results_per_page)
+    current_photographers = selection[start:end]
+    return current_photographers
+
+# helper function to access the price values of a photographer
+def get_service_price(photographer):
+    return photographer['price']['price_value']
 
 
 app = create_app(database_path=DB_PATH)
