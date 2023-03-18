@@ -30,4 +30,4 @@ else:
     
 ENV_DB_PATH = os.environ.get('DATABASE_URL', None)
 if ENV_DB_PATH is not None:
-    DB_PATH = ENV_DB_PATH
+    DB_PATH = ENV_DB_PATH.replace('postgres', 'postgresql', 1)
