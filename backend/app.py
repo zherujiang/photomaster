@@ -712,9 +712,10 @@ def create_app(database_path):
 
     return app
 
-    @app.route('/serve')
+    @app.route('/serve', methods=['GET'])
     def serve():
         abort(400)
+        print("in serve")
         return send_from_directory(app.static_folder, 'index.html')
 
 
