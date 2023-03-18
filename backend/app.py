@@ -712,6 +712,10 @@ def create_app(database_path):
     return app
 
 
+# if __name__ == '__main__':
+# app = create_app(database_path=DB_PATH)
+# app.run(debug=True)
+
+app = create_app(database_path=DB_PATH)
 if __name__ == '__main__':
-    app = create_app(database_path=DB_PATH)
-    app.run(debug=True)
+    app.run()
