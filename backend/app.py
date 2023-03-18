@@ -611,6 +611,17 @@ def create_app(database_path):
             'photo_urls': updated_photo_urls
         })
     
+
+    @app.route('/serve', methods=['GET'])
+    def serve():
+        # abort(400)
+        
+        return jsonify({
+            'success': True,
+            'info': 'aaa'
+        })
+        # return send_from_directory(app.static_folder, 'index.html')
+    
     '''
     send emails to photographers on behalf of customers
     '''
@@ -711,12 +722,6 @@ def create_app(database_path):
         }), error.status_code
 
     return app
-
-    @app.route('/serve', methods=['GET'])
-    def serve():
-        abort(400)
-        print("in serve")
-        return send_from_directory(app.static_folder, 'index.html')
 
 
 app = create_app(database_path=DB_PATH)
