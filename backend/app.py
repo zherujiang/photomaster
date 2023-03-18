@@ -1,4 +1,5 @@
 import os
+from flask.helpers import send_from_directory
 from flask import Flask, request, jsonify, abort, redirect, flash
 import requests
 from models import setup_db, Photographer, Service, Photo, Price
@@ -75,7 +76,7 @@ def get_service_price(photographer):
 
 
 def create_app(database_path):
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
     setup_db(app, database_path)
     CORS(app)
     
@@ -711,10 +712,10 @@ def create_app(database_path):
 
     return app
 
+    @app.route('/')
+    def serve():
+        return send_from_directory(app.static_folder, 'index.html')
 
-# if __name__ == '__main__':
-# app = create_app(database_path=DB_PATH)
-# app.run(debug=True)
 
 app = create_app(database_path=DB_PATH)
 if __name__ == '__main__':
