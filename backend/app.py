@@ -76,7 +76,7 @@ def get_service_price(photographer):
 
 
 def create_app(database_path):
-    app = Flask(__name__, static_folder='frontend/build', static_url_path='')
+    app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
     setup_db(app, database_path)
     CORS(app)
     
@@ -612,7 +612,7 @@ def create_app(database_path):
         })
     
 
-    @app.route('/serve', methods=['GET'])
+    @app.route('/')
     def serve():
         return send_from_directory(app.static_folder, 'index.html')
     
