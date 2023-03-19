@@ -221,7 +221,7 @@ function PhotographerEditForm(props) {
         if (lastUsedFileUrl) {
             const lastUsedFileName = lastUsedFileUrl[-2];
             // console.log(lastUsedFileName);
-            if (lastUsedFileName != 'profile_photo_default_1024') {
+            if (lastUsedFileName != 'fixed_profile_photo_default_800') {
                 previousProfilePhotos.push(lastUsedFileUrl);
             }
         }
@@ -250,7 +250,6 @@ function PhotographerEditForm(props) {
         if (fileList.length == 0) {
             return;
         }
-
         for (const photoURL of fileList) {
             await deleteFromS3(photoURL);
         }
