@@ -58,12 +58,12 @@ function SearchView(props) {
     }
 
     function ServiceCategory(props) {
-        const { id, name, image, selected } = props;
+        const { id, name, imageURL, selected } = props;
         return (
             <div className="col mb-3">
                 <div className={`card border-2 ${selected ? 'border-primary' : 'border-light-subtle'}`}
                     onClick={() => { handleSelectCategory(id) }}>
-                    <img src={`../assets/${image}`} className='card-img-top square-image object-fit-cover' alt={`${image}`} />
+                    <img src={imageURL} className='card-img-top square-image object-fit-cover' alt={`image of service category ${name}`} />
                     <div className='card-body'>
                         <h6 className='card-title'>{titleCase(name)}</h6>
                     </div>
@@ -96,7 +96,7 @@ function SearchView(props) {
                                 key={category.id}
                                 id={category.id}
                                 name={category.name}
-                                image={category.image_link}
+                                imageURL={category.image_link}
                                 selected={selectedService === category.id ? true : false}
                             />
                         ))}

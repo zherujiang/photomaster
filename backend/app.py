@@ -733,4 +733,4 @@ def get_service_price(photographer):
 
 app = create_app(database_path=DB_PATH)
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
