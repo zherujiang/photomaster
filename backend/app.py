@@ -156,7 +156,7 @@ def create_app(database_path):
         if service_id and city:
             try:
                 photographer_w_service = Photographer.query.filter(Photographer.services.any(service_id))
-                if bool(can_travel):
+                if can_travel.lower() == 'true':
                     photographer_query = photographer_w_service.filter((Photographer.city == city) | (Photographer.can_travel ==True))\
                         .order_by(Photographer.name).all()
                 else:
