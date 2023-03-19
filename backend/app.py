@@ -33,7 +33,7 @@ def create_app(database_path):
     
     # serve frontend React app
     @app.route('/account')
-    def serve():
+    def serve_callback():
         return send_from_directory(app.static_folder, 'index.html')
 
     @app.route('/services')
