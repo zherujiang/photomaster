@@ -273,6 +273,22 @@ function PhotographerEditForm(props) {
         });
     };
 
+    // helper function to format words intotitle case
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function titleCase(string) {
+        const words = string.split(' ');
+        let titleCasedString = '';
+        for (let i = 0; i < words.length; i++) {
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
+        }
+        return titleCasedString;
+    }
+
     function AlertSaveSuccessful(response_status) {
         if (response_status = true) {
             return (
@@ -373,7 +389,7 @@ function PhotographerEditForm(props) {
                                         <div className='form-check form-switch'>
                                             <input className='form-check-input' type='checkbox' role='switch' id={category.id}
                                                 checked={offeredServices.includes(category.id) ? true : false} onChange={handleToggleServices} />
-                                            <label className='form-check-label' htmlFor={category.id}>{category.name}</label>
+                                            <label className='form-check-label' htmlFor={category.id}>{titleCase(category.name)}</label>
                                         </div>
                                     </div>
                                     <div className='col col-12 col-md-8'>

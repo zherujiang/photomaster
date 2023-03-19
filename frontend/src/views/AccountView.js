@@ -62,6 +62,22 @@ function AccountView() {
         navigate(`/account/${userId}/initialize`)
     }
 
+    // helper function to format words intotitle case
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function titleCase(string) {
+        const words = string.split(' ');
+        let titleCasedString = '';
+        for (let i = 0; i < words.length; i++) {
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
+        }
+        return titleCasedString;
+    }
+
     useEffect(() => {
         if (user && JWTReady) {
             findPhotographerAccount();
@@ -107,7 +123,7 @@ function AccountView() {
                             <div className='col'>
                                 <h3>My Account</h3>
                                 <p>View and manage your account.</p>
-                                <h6>Welcome, {photographerName}</h6>
+                                <h6>Welcome, {titleCase(photographerName)}</h6>
                             </div>
                         </div>
                         <div className='row py-4 mb-3'>
