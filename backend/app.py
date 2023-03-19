@@ -30,6 +30,11 @@ def create_app(database_path):
     @app.route('/')
     def serve():
         return send_from_directory(app.static_folder, 'index.html')
+    
+    # serve frontend React app
+    @app.route('/account')
+    def serve():
+        return send_from_directory(app.static_folder, 'index.html')
 
     @app.route('/services')
     @cross_origin()
