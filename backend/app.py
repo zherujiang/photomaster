@@ -28,7 +28,7 @@ def create_app(database_path):
     
     # serve frontend React app
     @app.route('/')
-    def serve():
+    def serve_react():
         return send_from_directory(app.static_folder, 'index.html')
     
     # serve frontend React app
@@ -58,9 +58,10 @@ def create_app(database_path):
             abort(400)
         service_name = request_data.get('name')
         service_image = request_data.get('image_link')
-
+        if not service_name:
+            abort(400)
         try:
-            new_service = Service(name=service_name)
+            new_service = Service(name=service_name.lower())
             new_service.insert()
             if service_image:
                 new_service.image_link = service_image
@@ -114,16 +115,20 @@ def create_app(database_path):
         if not service_query:
             abort(404)
 
-        deleted_service = service_query.format()
         affected_photographers = Photographer.query.\
             filter(Photographer.services.any(service_id)).all()
 
         try:
-            # delete the service from photographers that provide this service
             for photographer in affected_photographers:
+                # delete the service from photographers that provide this service
                 photographer.services.remove(service_id)
+                # delete the service price info for the affected photographers
+                price_query = photographer.prices[0]
+                del price_query.price_values[service_id - 1]
+                del price_query.price_types[service_id - 1]
 
-            # delete the service category, related photos and prices will be auto-deleted
+            # delete the service category
+            deleted_service = service_query.format()
             service_query.delete()
 
             return jsonify({
