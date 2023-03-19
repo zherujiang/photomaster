@@ -4,8 +4,8 @@ from flask import Flask, request, jsonify, abort, redirect, flash
 import requests
 from models import setup_db, Photographer, Service, Photo, Price
 from flask_cors import CORS, cross_origin
-from settings import DB_PATH
-from werkzeug.utils import secure_filename
+from settings import DB_PATH, S3_BUCKET_BASE_URL
+# from werkzeug.utils import secure_filename
 from auth import requires_auth, AuthError
 # from flask_mail import Mail, Message
 # from settings import MAIL_USERNAME, MAIL_PASSWORD
@@ -247,6 +247,7 @@ def create_app(database_path):
             try:
                 # initialize photographer and insert
                 new_photographer = Photographer(name, email)
+                new_photographer.profile_photo = S3_BUCKET_BASE_URL + 'fixed_profile_photo_default_800.png'
                 new_photographer.insert()
                 
                 # check if the new photographer is successfully inserted and get the new photographer id
