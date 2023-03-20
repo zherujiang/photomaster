@@ -29,8 +29,10 @@ function PhotographerEditForm(props) {
     const [priceTypes, setPriceTypes] = useState([]);
 
     const [uploadStatus, setUploadStatus] = useState('Upload photo');
+    const [deleteStatus, setDeleteStatus] = useState('Delete photo');
     const [newProfilePhotos, setNewProfilePhotos] = useState([]);
     const [previousProfilePhotos, setPreviousProfilePhotos] = useState([]);
+    const defaultProfilePhoto = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/fixed_profile_photo_default_800.png'
 
     // server request to get all service categories
     function getServices() {
@@ -111,6 +113,7 @@ function PhotographerEditForm(props) {
                 setPrices(data['prices']);
 
                 if (previousProfilePhotos) {
+                    console.log('previous profile photos', previousProfilePhotos);
                     deleteUnusedProfilePhotos(previousProfilePhotos);
                     setPreviousProfilePhotos([]);
                 }
@@ -128,6 +131,16 @@ function PhotographerEditForm(props) {
             setNewProfilePhotos([]);
         }
         navigate('/account')
+    }
+
+    async function deleteUnusedProfilePhotos(fileList) {
+        console.log('files to delete', fileList);
+        if (fileList.length == 0) {
+            return;
+        }
+        for (const photoURL of fileList) {
+            await deleteFromS3(photoURL);
+        }
     }
 
     function handleInputChange(event) {
@@ -211,31 +224,27 @@ function PhotographerEditForm(props) {
         setNewProfilePhotos(newPhotosList);
 
         // get the current profile photo file url and save it in the list for deletion
-        if (profilePhoto.length > 0) {
-            const lastUsedFileName = profilePhoto.split('.')[-2];
-            console.log(lastUsedFileName);
-            if (lastUsedFileName != 'fixed_profile_photo_default_800') {
-                const previousPhotosList = [...previousProfilePhotos];
-                previousPhotosList.push(profilePhoto);
-                setPreviousProfilePhotos(previousPhotosList);
-            }
+        if (profilePhoto.length > 0 && profilePhoto != defaultProfilePhoto) {
+            const previousPhotosList = [...previousProfilePhotos];
+            previousPhotosList.push(profilePhoto);
+            setPreviousProfilePhotos(previousPhotosList);
+            console.log('previousPhotosList', previousPhotosList);
         }
 
         setProfilePhoto(newFileLocation);
         setUploadStatus('Upload photo');
     }
 
-    async function deleteUnusedProfilePhotos(fileList) {
-        // console.log('files to delete', fileList);
-        if (fileList.length == 0) {
-            return;
-        }
-        for (const photoURL of fileList) {
-            await deleteFromS3(photoURL);
+    async function handleDeleteProfilePhoto() {
+        if (profilePhoto != defaultProfilePhoto) {
+            setDeleteStatus('Deleting');
+            await deleteFromS3(profilePhoto);
+            setProfilePhoto(defaultProfilePhoto);
+            setDeleteStatus('Delete Photo');
         }
     }
 
-    // helper function to format words intotitle case
+    // helper function to format words into title case
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
@@ -378,6 +387,7 @@ function PhotographerEditForm(props) {
                         {uploadStatus}
                     </label>
                     <input id="profile-photo-upload" type='file' hidden onChange={handleUploadProfilePhoto} />
+                    <button type='button' className='btn btn-link' onClick={handleDeleteProfilePhoto}>{deleteStatus}</button>
                 </div>
             </div>
             <div id='form-actions' className='row justify-content-center mb-3'>

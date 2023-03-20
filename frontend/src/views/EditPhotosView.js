@@ -51,7 +51,7 @@ function EditPhotosView() {
     }
 
     // Delete photos in selected from database
-    const deletePhotosFromDatabase = () => {
+    function deletePhotosFromDatabase() {
         axios.delete(
             `/photos/${photographerId}`,
             {
@@ -77,7 +77,7 @@ function EditPhotosView() {
         }
     }, [JWTReady])
 
-    const handleUpload = async (e) => {
+    async function handleUpload(e) {
         if (e.target.files.length == 0) {
             return;
         }
@@ -94,7 +94,7 @@ function EditPhotosView() {
         setUploadStatus('Upload photos');
     };
 
-    const handleDelete = async (e) => {
+    async function handleDelete() {
         if (selectedPhotos.length == 0) {
             return;
         }
@@ -109,7 +109,7 @@ function EditPhotosView() {
         setDeleteStatus('Delete selected photos');
     }
 
-    const changeSelectedPhotos = (e) => {
+    function changeSelectedPhotos(e) {
         const photoURL = e.target.src;
         if (selectedPhotos.includes(photoURL)) {
             setSelectedPhotos(selectedPhotos.filter((url) => {
