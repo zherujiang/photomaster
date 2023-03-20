@@ -16,7 +16,6 @@ function EditPhotosView() {
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
     const [deleteStatus, setDeleteStatus] = useState('Delete selected photos');
     const [selectedPhotos, setSelectedPhotos] = useState([]);
-    let newPhotosList = [];
 
     // Server request to get all existing photos from the database
     function getPhotosFromDatabase() {
@@ -31,27 +30,43 @@ function EditPhotosView() {
             })
     }
 
-    // Add photos in newPhotosList to database
-    function addPhotosToDatabase() {
+    useEffect(() => {
+        if (JWTReady) {
+            getPhotosFromDatabase();
+        }
+    }, [JWTReady])
+
+    async function handleUpload(e) {
+        setUploadStatus('Uploading');
+
+        var newPhotosList = new FormData();
+        for (const file of e.target.files) {
+            newPhotosList.append('image', file);
+        }
+        
         axios.post(
             `/photos/${photographerId}`,
-            {
-                new_photos_list: newPhotosList
-            },
+            newPhotosList,
             buildAuthHeader()
         )
-            .then(response => {
-                const data = response.data;
-                setExistingPhotoURLs(data['photo_urls'])
-            })
-            .catch(error => {
-                setAxiosError(error);
-                console.log(error);
-            })
-    }
+        .then(response => {
+            const data = response.data;
+            setExistingPhotoURLs(data['photo_urls'])
+            setUploadStatus('Upload photos');
+        })
+        .catch(error => {
+            setAxiosError(error);
+            console.log(error);
+        })
+    };
 
-    // Delete photos in selected from database
-    function deletePhotosFromDatabase() {
+    async function handleDelete() {
+        if (selectedPhotos.length == 0) {
+            return;
+        }
+
+        setDeleteStatus('Deleting');
+
         axios.delete(
             `/photos/${photographerId}`,
             {
@@ -61,52 +76,17 @@ function EditPhotosView() {
                 }
             }
         )
-            .then(response => {
-                const data = response.data;
-                setExistingPhotoURLs(data['photo_urls'])
-            })
-            .catch(error => {
-                setAxiosError(error);
-                console.log(error);
-            })
-    }
-
-    useEffect(() => {
-        if (JWTReady) {
-            getPhotosFromDatabase();
-        }
-    }, [JWTReady])
-
-    async function handleUpload(e) {
-        if (e.target.files.length == 0) {
-            return;
-        }
-
-        newPhotosList = [];
-        setUploadStatus('Uploading');
-
-        for (const file of e.target.files) {
-            let newFileLocation = await uploadToS3(file);
-            newPhotosList.push(newFileLocation);
-        }
-
-        addPhotosToDatabase();
-        setUploadStatus('Upload photos');
-    };
-
-    async function handleDelete() {
-        if (selectedPhotos.length == 0) {
-            return;
-        }
-
-        setDeleteStatus('Deleting');
-        for (const photoURL of selectedPhotos) {
-            await deleteFromS3(photoURL);
-        }
-
-        deletePhotosFromDatabase();
+        .then(response => {
+            const data = response.data;
+            setExistingPhotoURLs(data['photo_urls'])
+        })
+        .catch(error => {
+            setAxiosError(error);
+            console.log(error);
+        })
+        
         setSelectedPhotos([]);
-        setDeleteStatus('Delete selected photos');
+        setDeleteStatus('Delete selected photos');        
     }
 
     function changeSelectedPhotos(e) {
