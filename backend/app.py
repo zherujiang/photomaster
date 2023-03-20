@@ -85,7 +85,7 @@ def create_app(database_path):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
         if not service_query:
-            abort(404)
+            abort(404, description="flask error")
 
         request_data = request.get_json()
         if not request_data:
@@ -113,7 +113,7 @@ def create_app(database_path):
         service_query = Service.query.filter(
             Service.id == service_id).one_or_none()
         if not service_query:
-            abort(404)
+            abort(404, description="flask error")
 
         affected_photographers = Photographer.query.\
             filter(Photographer.services.any(service_id)).all()
@@ -204,7 +204,7 @@ def create_app(database_path):
             filter(Photographer.id == photographer_id).one_or_none()
 
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
         else:
             price_query = photographer_query.prices[0]
             prices = price_query.format()
@@ -282,7 +282,7 @@ def create_app(database_path):
         photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         photographer_email = photographer_query.email
         authenticated_user_email = payload.get('https://photomaster.com/email')
@@ -344,7 +344,7 @@ def create_app(database_path):
         photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         # check if the user making the request is the registered photographer
         photographer_email = photographer_query.email
@@ -379,7 +379,7 @@ def create_app(database_path):
         photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         # check if the user making the request is the registered photographer
         photographer_email = photographer_query.email
@@ -444,7 +444,7 @@ def create_app(database_path):
         photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         # check if the user making the request is the registered photographer
         photographer_email = photographer_query.email
@@ -482,7 +482,7 @@ def create_app(database_path):
         photographer_query = Photographer.query.filter(
             Photographer.id == photographer_id).one_or_none()
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         # check if the user making the request is the registered photographer
         photographer_email = photographer_query.email
@@ -531,7 +531,7 @@ def create_app(database_path):
             Photographer.id == photographer_id).one_or_none()
 
         if not photographer_query:
-            abort(404)
+            abort(404, description="flask error")
 
         # check if the user making the request is the registered photographer
         photographer_email = photographer_query.email
@@ -624,15 +624,17 @@ def create_app(database_path):
             'error': 403,
             'message': 'forbidden'
         }), 403
-
+        
     @app.errorhandler(404)
     def not_found(error):
-        # return jsonify({
-        #     'success': False,
-        #     'error': 404,
-        #     'message': 'resource not found'
-        # }), 404
-        return send_from_directory(app.static_folder, 'index.html')
+        if error.description == "flask error":
+            return jsonify({
+                'success': False,
+                'error': 404,
+                'message': 'resource not found'
+            }), 404
+        else:
+            return send_from_directory(app.static_folder, 'index.html')
 
     @app.errorhandler(405)
     def method_not_allowed(error):
