@@ -1,33 +1,22 @@
-import AWS from 'aws-sdk';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAccessToken } from '../hooks/AuthHook'
+import { useAccessToken } from '../hooks/AuthHook';
+import { useS3Bucket } from '../hooks/S3Hook';
 import axios from "axios";
 import ErrorBoundary from '../components/ErrorBoundary';
 import '../stylesheets/PhotoGrid.css'
 
-// environment config
-const BUCKET_NAME = 'photomasterbucket'
-
-AWS.config.update({
-    accessKeyId: 'AKIAQRJG34B24IU25SOJ',
-    secretAccessKey: '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',
-    region: 'us-west-2',
-    signatureVersion: 'v4',
-})
-
 function EditPhotosView() {
     const { photographerId } = useParams();
-    const s3 = new AWS.S3();
     const [axiosError, setAxiosError] = useState(null);
+    const { loadLocalJWT, JWTReady, buildAuthHeader } = useAccessToken();
+    const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [existingPhotoURLs, setExistingPhotoURLs] = useState([]);
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
     const [deleteStatus, setDeleteStatus] = useState('Delete selected photos');
     const [selectedPhotos, setSelectedPhotos] = useState([]);
     let newPhotosList = [];
-
-    const { loadLocalJWT, JWTReady, buildAuthHeader } = useAccessToken();
 
     // Server request to get all existing photos from the database
     function getPhotosFromDatabase() {
@@ -88,38 +77,6 @@ function EditPhotosView() {
         }
     }, [JWTReady])
 
-    const uploadToS3 = async (file) => {
-        if (!file) {
-            return;
-        }
-        const params = {
-            Bucket: BUCKET_NAME,
-            Key: `${Date.now()}.${file.name}`,
-            Body: file
-        }
-        const { Location } = await s3.upload(params).promise();
-        newPhotosList.push(Location);
-        // console.log('uploading to s3', Location);
-    }
-
-    const deleteFromS3 = async (photoURL) => {
-        if (!photoURL) {
-            return;
-        }
-        const params = {
-            Bucket: BUCKET_NAME,
-            Key: photoURL.slice(photoURL.lastIndexOf('/') + 1),
-        }
-        s3.deleteObject(params, (err, data) => {
-            if (err) {
-                console.log(err, err.stack);
-            }
-            else {
-                console.log("deleted from s3", photoURL);
-            }
-        });
-    };
-
     const handleUpload = async (e) => {
         if (e.target.files.length == 0) {
             return;
@@ -127,9 +84,10 @@ function EditPhotosView() {
 
         newPhotosList = [];
         setUploadStatus('Uploading');
-        // console.log('uploading', e.target.files);
+
         for (const file of e.target.files) {
-            await uploadToS3(file);
+            let newFileLocation = await uploadToS3(file);
+            newPhotosList.push(newFileLocation);
         }
 
         addPhotosToDatabase();

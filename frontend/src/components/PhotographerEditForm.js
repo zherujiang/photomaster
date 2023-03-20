@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessToken } from '../hooks/AuthHook';
+import { useS3Bucket } from '../hooks/S3Hook';
 import axios from "axios";
-import AWS from 'aws-sdk';
 import '../stylesheets/PhotoGrid.css'
-
-// environment config
-const BUCKET_NAME = 'photomasterbucket'
-
-AWS.config.update({
-    accessKeyId: 'AKIAQRJG34B24IU25SOJ',
-    secretAccessKey: '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',
-    region: 'us-west-2',
-    signatureVersion: 'v4',
-})
 
 function PhotographerEditForm(props) {
     const navigate = useNavigate();
     const { photographerId } = props;
-    const s3 = new AWS.S3();
     const [axiosError, setAxiosError] = useState(null);
+    const { JWTReady, buildAuthHeader } = useAccessToken();
+    const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
@@ -38,10 +29,8 @@ function PhotographerEditForm(props) {
     const [priceTypes, setPriceTypes] = useState([]);
 
     const [uploadStatus, setUploadStatus] = useState('Upload photo');
-    let newProfilePhotos = [];
-    let previousProfilePhotos = [];
-
-    const { JWTReady, buildAuthHeader } = useAccessToken();
+    const [newProfilePhotos, setNewProfilePhotos] = useState([]);
+    const [previousProfilePhotos, setPreviousProfilePhotos] = useState([]);
 
     // server request to get all service categories
     function getServices() {
@@ -123,7 +112,7 @@ function PhotographerEditForm(props) {
 
                 if (previousProfilePhotos) {
                     deleteUnusedProfilePhotos(previousProfilePhotos);
-                    previousProfilePhotos = [];
+                    setPreviousProfilePhotos([]);
                 }
                 navigate('/account');
             })
@@ -136,7 +125,7 @@ function PhotographerEditForm(props) {
     function cancelProfileUpdate() {
         if (newProfilePhotos) {
             deleteUnusedProfilePhotos(newProfilePhotos);
-            newProfilePhotos = [];
+            setNewProfilePhotos([]);
         }
         navigate('/account')
     }
@@ -212,41 +201,32 @@ function PhotographerEditForm(props) {
         }
 
         setUploadStatus('Uploading');
-        // console.log('uploading', e.target.files);
+        // start upload
+        const file = e.target.files[0];
+        let newFileLocation = await uploadToS3(file);
 
-        let fileAttached = e.target.files[0];
+        // keep record of the new photos uploaded
+        const newPhotosList = [...newProfilePhotos];
+        newPhotosList.push(newFileLocation);
+        setNewProfilePhotos(newPhotosList);
 
         // get the current profile photo file url and save it in the list for deletion
-        const lastUsedFileUrl = profilePhoto.split('.');
-        if (lastUsedFileUrl) {
-            const lastUsedFileName = lastUsedFileUrl[-2];
+        if (profilePhoto.length > 0) {
+            const lastUsedFileName = profilePhoto.split('.')[-2];
             // console.log(lastUsedFileName);
             if (lastUsedFileName != 'fixed_profile_photo_default_800') {
-                previousProfilePhotos.push(lastUsedFileUrl);
+                const previousPhotosList = [...previousProfilePhotos];
+                previousPhotosList.push(profilePhoto);
+                setPreviousProfilePhotos(previousPhotosList);
             }
         }
 
-        await uploadToS3(fileAttached);
+        setProfilePhoto(newFileLocation);
         setUploadStatus('Upload photo');
     }
 
-    async function uploadToS3(file) {
-        if (!file) {
-            return;
-        }
-        const params = {
-            Bucket: BUCKET_NAME,
-            Key: `${Date.now()}.${file.name}`,
-            Body: file
-        }
-        const { Location } = await s3.upload(params).promise();
-        setProfilePhoto(Location);
-
-        newProfilePhotos.push(Location);
-        console.log('uploading to s3', Location);
-    }
-
     async function deleteUnusedProfilePhotos(fileList) {
+        // console.log('files to delete', fileList);
         if (fileList.length == 0) {
             return;
         }
@@ -254,24 +234,6 @@ function PhotographerEditForm(props) {
             await deleteFromS3(photoURL);
         }
     }
-
-    async function deleteFromS3(photoURL) {
-        if (!photoURL) {
-            return;
-        }
-        const params = {
-            Bucket: BUCKET_NAME,
-            Key: photoURL.slice(photoURL.lastIndexOf('/') + 1),
-        }
-        s3.deleteObject(params, (err, data) => {
-            if (err) {
-                console.log(err, err.stack);
-            }
-            else {
-                console.log("deleted from S3", photoURL);
-            }
-        });
-    };
 
     // helper function to format words intotitle case
     function capitalizeFirstLetter(string) {
