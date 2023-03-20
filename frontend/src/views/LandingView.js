@@ -1,23 +1,36 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SignupButton from '../components/SignupButton';
+import '../stylesheets/LandingView.css'
 
 function LandingView() {
+    const BUKET_BASE_URL = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/';
+
     return (
         <div id='landing-view'>
-            <div className='container text-center py-4 mt-4'>
-                <div className='row align-items-center py-4 mt-4'>
-                    <div className='col-md-6 border-1 border-end py-4'>
-                        <Link className='btn btn-primary' to='/search'>Find photographers</Link>
-                        <p className='mt-3'>Find the best photographers near you</p>
+            <div className='container-fluid text-center'>
+                <div className='row'>
+                    <div className='col-lg-6'
+                        style={{ backgroundImage: `url(${BUKET_BASE_URL + 'fixed_bg_album.jpg'})`, backgroundSize: 'cover' }}>
+                        <div className='row full-page-row align-items-center'>
+                            <div className='col'>
+                                <Link className='btn btn-primary' to='/search'>Find photographers</Link>
+                                <p className='CTA-texts mt-3'>Find the best photographers near you</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className='col-md-6 border-1 border-start py-4'>
-                        <SignupButton />
-                        <p className='mt-3'>Join today and start meeting your customers</p>
+                    <div className='col-lg-6'
+                        style={{ backgroundImage: `url(${BUKET_BASE_URL + 'fixed_bg_photography.jpg'})`, backgroundSize: 'cover' }}>
+                        <div className='row full-page-row align-items-center'>
+                            <div className='col'>
+                                <SignupButton />
+                                <p className='CTA-texts mt-3'>Join today and meet your customers</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
