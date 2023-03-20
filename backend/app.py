@@ -627,11 +627,12 @@ def create_app(database_path):
 
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({
-            'success': False,
-            'error': 404,
-            'message': 'resource not found'
-        }), 404
+        # return jsonify({
+        #     'success': False,
+        #     'error': 404,
+        #     'message': 'resource not found'
+        # }), 404
+        return send_from_directory(app.static_folder, 'index.html')
 
     @app.errorhandler(405)
     def method_not_allowed(error):

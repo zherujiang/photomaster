@@ -213,7 +213,7 @@ function PhotographerEditForm(props) {
         // get the current profile photo file url and save it in the list for deletion
         if (profilePhoto.length > 0) {
             const lastUsedFileName = profilePhoto.split('.')[-2];
-            // console.log(lastUsedFileName);
+            console.log(lastUsedFileName);
             if (lastUsedFileName != 'fixed_profile_photo_default_800') {
                 const previousPhotosList = [...previousProfilePhotos];
                 previousPhotosList.push(profilePhoto);
