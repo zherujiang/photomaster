@@ -40,6 +40,7 @@ function SearchResultsView(props) {
                 service: service,
                 location: city,
                 can_travel: acceptTravel,
+                max_price: maxPrice,
                 sort_by: sortBy,
                 results_per_page: resultsPerPage,
                 current_page: currentPage
@@ -65,15 +66,18 @@ function SearchResultsView(props) {
         setSelectedCity(event.target.value);
     }
 
-    function handleToggleTravel(event) {
+    function handleToggleTravel() {
         setAcceptTravel(!acceptTravel);
     }
 
-    function submitSearch() {
-        findPhotographers();
+    function submitSearch(e) {
+        e.preventDefault();
+        if (selectedService && selectedCity) {
+            findPhotographers();
+        }
     }
 
-    function handleSelectPriceRange(event) {
+    function handleSetMaxPrice(event) {
         setMaxPrice(event.target.value);
     }
 
@@ -114,7 +118,7 @@ function SearchResultsView(props) {
         if (selectedService && selectedCity) {
             findPhotographers();
         }
-    }, [currentPage, resultsPerPage, acceptTravel, sortBy])
+    }, [currentPage, resultsPerPage, acceptTravel, maxPrice, sortBy])
 
     // when there is an axios error, throw the error to be handled by ErrorBoundary
     const AxiosError = () => {
@@ -128,9 +132,9 @@ function SearchResultsView(props) {
         <div id='search-results-view' className='container py-3'>
             <ErrorBoundary>
                 <AxiosError />
-                <div className='search-query my-3'>
+                <form id='search-query' className='my-3'>
                     <div className='row align-items-center justify-content-center'>
-                        <div className='col col-6 col-sm-5  mb-3'>
+                        <div className='col col-12 col-md-6 col-lg-5 mb-3'>
                             <div className='input-group'>
                                 <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
                                 <select className='form-select' id='serviceCategory'
@@ -141,18 +145,18 @@ function SearchResultsView(props) {
                                 </select>
                             </div>
                         </div>
-                        <div className='col col-6 col-sm-5 mb-3'>
+                        <div className='col col-12 col-md-6 col-lg-5 mb-3'>
                             <div className='input-group'>
                                 <label className='input-group-text' htmlFor='city'>Near</label>
-                                <input type='text' className='form-control' id='city'
-                                    placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} aria-label='City' />
+                                <input type='text' className='form-control' id='city' aria-label='City'
+                                    placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} required />
                             </div>
                         </div>
-                        <div className='col col-12 col-sm-2 mb-3 d-grid'>
-                            <button type='button' className='btn btn-primary' onClick={submitSearch}>Search</button>
+                        <div className='col col-12 col-md-4 col-lg-2 mb-3 d-grid'>
+                            <button type='submit' className='btn btn-primary' onClick={submitSearch}>Search</button>
                         </div>
                     </div>
-                </div>
+                </form>
                 <div id='search-display' className='pt-3'>
                     <div className='row align-items-start'>
                         <div id='search-filter' className='col col-12 col-md-3 mb-4'>
@@ -170,8 +174,9 @@ function SearchResultsView(props) {
                                 </div>
                                 <div id='slide-container' className='mb-3'>
                                     <label htmlFor='priceRange'>Price Range</label>
-                                    <input type='range' min='1' max='100' value='50' onChange={handleSelectPriceRange}
+                                    <input type='range' min='1' max='1000' value={maxPrice} onChange={handleSetMaxPrice}
                                         className='slider d-block w-100 mt-2' id='priceRange' />
+                                    <span>{`$0 - $${maxPrice}`}</span>
                                 </div>
                             </div>
                         </div>
@@ -184,7 +189,7 @@ function SearchResultsView(props) {
                                     <div className='input-group'>
                                         <label className='input-group-text' htmlFor='sortBy'>Sort by</ label>
                                         <select value={sortBy} className='form-select' id='sortBy' onChange={handleSelectSortBy}>
-                                            <option value={'name'}>A to Z</option>
+                                            <option value={'name'}>Name (A to Z)</option>
                                             <option value={'price_up'}>price low to high</option>
                                             <option value={'price_down'}>price high to low</option>
                                         </select>

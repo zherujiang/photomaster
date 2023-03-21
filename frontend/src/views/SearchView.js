@@ -32,13 +32,16 @@ function SearchView(props) {
         setSelectedCity(event.target.value);
     }
 
-    function submitSearch() {
-        navigate('/searchresults', {
-            state: {
-                'selectedService': selectedService,
-                'selectedCity': selectedCity
-            }
-        })
+    function submitSearch(e) {
+        e.preventDefault();
+        if (selectedService && selectedCity) {
+            navigate('/searchresults', {
+                state: {
+                    'selectedService': selectedService,
+                    'selectedCity': selectedCity
+                }
+            })
+        }
     }
 
     // helper function to format words intotitle case
@@ -101,24 +104,22 @@ function SearchView(props) {
                             />
                         ))}
                     </div>
-                    <h4>Near</h4>
-                    <div className='row justify-content-center my-4'>
-                        <div className='col col-auto'>
-                            <div className='input-group'>
-                                <span className='input-group-text'>Location</span>
-                                <input type='text' className='form-control' id='city' placeholder='City or zip code' aria-label='City'
-                                    onChange={handleCityChange} />
+                    <form>
+                        <h4>Near</h4>
+                        <div className='my-4 row justify-content-center'>
+                            <div className='col col-12 col-md-6'>
+                                <div className='input-group'>
+                                    <span className='input-group-text'>Location</span>
+                                    <input type='text' className='form-control' id='city' placeholder='City or zip code' aria-label='City'
+                                        onChange={handleCityChange} required='required' />
+                                    <button type='submit' className='btn btn-primary' onClick={submitSearch}>Search</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className='row justify-content-center mb-3'>
-                        <div className='col col-auto'>
-                            <button type='button' className='btn btn-primary' onClick={submitSearch}>Search</button>
-                        </div>
-                    </div>
+                    </form>
                 </ErrorBoundary>
             </div>
-        </div>
+        </div >
     )
 }
 

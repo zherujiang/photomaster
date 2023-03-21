@@ -147,20 +147,22 @@ def create_app(database_path):
     def search_photographers():
         service_id = request.args.get('service')
         location = request.args.get('location')
-        city = find_city(location)
         can_travel = request.args.get('can_travel')
+        max_price = request.args.get('max_price')
         sort_by = request.args.get('sort_by')
         results_per_page = request.args.get('results_per_page')
         current_page = request.args.get('current_page')
+        city = find_city(location)
+        location_pattern = '%' + city + '%'
         
         if service_id and city:
             try:
                 photographer_w_service = Photographer.query.filter(Photographer.services.any(service_id))
                 if can_travel.lower() == 'true':
-                    photographer_query = photographer_w_service.filter((Photographer.city == city) | (Photographer.can_travel ==True))\
+                    photographer_query = photographer_w_service.filter((Photographer.city.like(location_pattern)) | (Photographer.can_travel ==True))\
                         .order_by(Photographer.name).all()
                 else:
-                    photographer_query = photographer_w_service.filter(Photographer.city == city).order_by(Photographer.name).all()
+                    photographer_query = photographer_w_service.filter(Photographer.city.like(location_pattern)).order_by(Photographer.name).all()
             except Exception as e:
                 print(e)
                 abort(422)
@@ -172,10 +174,16 @@ def create_app(database_path):
                 price_query = photographer.prices[0]
                 
                 # format photographer search results to include overview info, photos, and price of selected service
-                photographer_info = photographer.overview()
-                photographer_info['photos'] = [photo.format() for photo in photo_query]
-                photographer_info['price'] = price_query.format_by_service(service_id)
-                search_results.append(photographer_info)
+                current_service_price = price_query.price_values[int(service_id) - 1]
+                if current_service_price <= int(max_price):
+                    photographer_info = photographer.overview()
+                    photographer_info['photos'] = [photo.format() for photo in photo_query]
+                    photographer_info['price'] = price_query.format_by_service(service_id)
+                    search_results.append(photographer_info)
+
+            # helper function to access the price values of a photographer
+            def get_service_price(user):
+                return user['price']['price_value']
             
             if sort_by == 'price_up':    
                 # sort search_results based on the service price low to high
@@ -729,11 +737,6 @@ def paginate_search_results(selection, results_per_page, current_page):
     end = start + int(results_per_page)
     current_photographers = selection[start:end]
     return current_photographers
-
-# helper function to access the price values of a photographer
-def get_service_price(photographer):
-    return photographer['price']['price_value']
-
 
 app = create_app(database_path=DB_PATH)
 if __name__ == '__main__':
