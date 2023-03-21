@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from flask.helpers import send_from_directory
 from flask import Flask, request, jsonify, abort, redirect, flash
 import requests
@@ -414,7 +415,7 @@ def create_app(database_path):
 
         try:
             # parse data from the request
-            request_body = request.get_json()
+            request_body = json.loads(request.form['data'])
             name = request_body.get('name')
             city = request_body.get('city')
             can_travel = request_body.get('can_travel')
@@ -425,6 +426,14 @@ def create_app(database_path):
             bio = request_body.get('bio')
             price_values = request_body.get('price_values')
             price_types = request_body.get('price_types')
+
+            default_profile_photo = S3_BUCKET_BASE_URL + \
+                'fixed_profile_photo_default_800.png'
+            if profile_photo != default_profile_photo and request.files:
+                photo = request.files['image']
+                s3_filename = f'{int(time.time())}.{photo.filename}'
+                if upload_to_s3(filename=s3_filename, file=photo):
+                    profile_photo = f'{S3_BUCKET_BASE_URL}{s3_filename}'
 
             # update price for the current photographer
             price_query = Price.query.filter(
@@ -519,10 +528,7 @@ def create_app(database_path):
 
         new_photos_list = request.files
         for photo in new_photos_list.getlist('image'):
-            print(photo)
-            print(photo.filename)
             s3_filename = f'{int(time.time())}.{photo.filename}'
-            print(s3_filename)
             if upload_to_s3(filename=s3_filename, file=photo):
                 try:
                     new_photo = Photo(
@@ -533,17 +539,6 @@ def create_app(database_path):
                 except Exception as e:
                     print(e)
                     abort(400)
-
-        # for file_location in new_photos_list:
-        #     try:
-        #         new_photo = Photo(
-        #             photographer_id,
-        #             file_location
-        #         )
-        #         new_photo.insert()
-        #     except Exception as e:
-        #         print(e)
-        #         abort(400)
 
         photo_query = Photo.query.filter(
             Photo.photographer_id == photographer_query.id).order_by(Photo.id).all()
@@ -582,26 +577,6 @@ def create_app(database_path):
 
         data = request.get_json()
         selected_photos_list = data.get('selected_photos_list')
-
-        print("selected_photos_list: ", selected_photos_list)
-
-        new_photos_list = request.files
-        for photo in new_photos_list.getlist('image'):
-            print(photo)
-            print(photo.filename)
-            s3_filename = f'{int(time.time())}.{photo.filename}'
-            print(s3_filename)
-            if upload_to_s3(filename=s3_filename, file=photo):
-                try:
-                    new_photo = Photo(
-                        photographer_id,
-                        f'{S3_BUCKET_BASE_URL}{s3_filename}'
-                    )
-                    new_photo.insert()
-                except Exception as e:
-                    print(e)
-                    abort(400)
-
         for photo_url in selected_photos_list:
             s3_filename = photo_url.replace(S3_BUCKET_BASE_URL, '', 1)
             if delete_from_s3(s3_filename):
