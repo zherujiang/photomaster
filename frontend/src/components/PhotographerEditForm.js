@@ -28,6 +28,7 @@ function PhotographerEditForm(props) {
     const [offeredServices, setOfferedServices] = useState([]);
     const [priceValues, setPriceValues] = useState([]);
     const [priceTypes, setPriceTypes] = useState([]);
+    const [alert, setAlert] = useState(false)
 
     const defaultProfilePhoto = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/fixed_profile_photo_default_800.png'
 
@@ -106,7 +107,6 @@ function PhotographerEditForm(props) {
         if (profilePhotoFile) {
             formData.append('image', profilePhotoFile)
         }
-
         axios.patch(
             `/photographer-edits/${photographerId}`,
             formData,
@@ -116,7 +116,10 @@ function PhotographerEditForm(props) {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
                 setPrices(data['prices']);
-                navigate('/account');
+                setAlert(true);
+                setTimeout(() => {
+                    navigate('/account');
+                }, 2000);
             })
             .catch(function (error) {
                 setAxiosError(error);
@@ -248,6 +251,12 @@ function PhotographerEditForm(props) {
         <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
                 {/* <AlertSaveSuccessful /> */}
+                {alert && <div className='col'>
+                    <div className='alert alert-success alert-dismissible' role='alert'>
+                        <div>Profile changes saved</div>
+                        <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                    </div>
+                </div>}
             </div>
             <div id='form-contents' className='row align-items-start my-3'>
                 <div id='profile-info' className='col col-12 col-lg-8'>
