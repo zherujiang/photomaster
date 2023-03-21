@@ -21,17 +21,15 @@ function PhotographerEditForm(props) {
     const [city, setCity] = useState('');
     const [canTravel, setCanTravel] = useState(false);
     const [address, setAddress] = useState('');
-    const [profilePhoto, setProfilePhoto] = useState('');
+    const [profilePhoto, setProfilePhoto] = useState(null);
+    const [profilePhotoFile, setProfilePhotoFile] = useState(null);
     const [portfolioLink, setPortfolioLink] = useState('');
     const [bio, setBio] = useState('');
     const [offeredServices, setOfferedServices] = useState([]);
     const [priceValues, setPriceValues] = useState([]);
     const [priceTypes, setPriceTypes] = useState([]);
+    const [alert, setAlert] = useState(false)
 
-    const [uploadStatus, setUploadStatus] = useState('Upload photo');
-    const [deleteStatus, setDeleteStatus] = useState('Delete photo');
-    const [newProfilePhotos, setNewProfilePhotos] = useState([]);
-    const [previousProfilePhotos, setPreviousProfilePhotos] = useState([]);
     const defaultProfilePhoto = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/fixed_profile_photo_default_800.png'
 
     // server request to get all service categories
@@ -91,33 +89,37 @@ function PhotographerEditForm(props) {
 
     // server request to submit photographer information updates
     function submitProfileUpdate() {
+        var profileData = {
+            'name': name,
+            'city': city,
+            'can_travel': canTravel,
+            'address': address,
+            'services': offeredServices,
+            'profile_photo': profilePhoto,
+            'portfolio_link': portfolioLink,
+            'bio': bio,
+            'price_values': priceValues,
+            'price_types': priceTypes
+        }
+
+        var formData = new FormData();
+        formData.append('data', JSON.stringify(profileData))
+        if (profilePhotoFile) {
+            formData.append('image', profilePhotoFile)
+        }
         axios.patch(
             `/photographer-edits/${photographerId}`,
-            {
-                'name': name,
-                'city': city,
-                'can_travel': canTravel,
-                'address': address,
-                'services': offeredServices,
-                'profile_photo': profilePhoto,
-                'portfolio_link': portfolioLink,
-                'bio': bio,
-                'price_values': priceValues,
-                'price_types': priceTypes
-            },
+            formData,
             buildAuthHeader()
         )
             .then(response => {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
                 setPrices(data['prices']);
-
-                if (previousProfilePhotos) {
-                    console.log('previous profile photos', previousProfilePhotos);
-                    deleteUnusedProfilePhotos(previousProfilePhotos);
-                    setPreviousProfilePhotos([]);
-                }
-                navigate('/account');
+                setAlert(true);
+                setTimeout(() => {
+                    navigate('/account');
+                }, 2000);
             })
             .catch(function (error) {
                 setAxiosError(error);
@@ -126,21 +128,7 @@ function PhotographerEditForm(props) {
     }
 
     function cancelProfileUpdate() {
-        if (newProfilePhotos) {
-            deleteUnusedProfilePhotos(newProfilePhotos);
-            setNewProfilePhotos([]);
-        }
         navigate('/account')
-    }
-
-    async function deleteUnusedProfilePhotos(fileList) {
-        console.log('files to delete', fileList);
-        if (fileList.length == 0) {
-            return;
-        }
-        for (const photoURL of fileList) {
-            await deleteFromS3(photoURL);
-        }
     }
 
     function handleInputChange(event) {
@@ -208,40 +196,19 @@ function PhotographerEditForm(props) {
         }
     }
 
-    async function handleUploadProfilePhoto(e) {
+    function handleUploadProfilePhoto(e) {
         if (e.target.files.length == 0) {
             return;
         }
 
-        setUploadStatus('Uploading');
-        // start upload
         const file = e.target.files[0];
-        let newFileLocation = await uploadToS3(file);
-
-        // keep record of the new photos uploaded
-        const newPhotosList = [...newProfilePhotos];
-        newPhotosList.push(newFileLocation);
-        setNewProfilePhotos(newPhotosList);
-
-        // get the current profile photo file url and save it in the list for deletion
-        if (profilePhoto.length > 0 && profilePhoto != defaultProfilePhoto) {
-            const previousPhotosList = [...previousProfilePhotos];
-            previousPhotosList.push(profilePhoto);
-            setPreviousProfilePhotos(previousPhotosList);
-            console.log('previousPhotosList', previousPhotosList);
-        }
-
-        setProfilePhoto(newFileLocation);
-        setUploadStatus('Upload photo');
+        setProfilePhoto(URL.createObjectURL(file));
+        setProfilePhotoFile(file);
     }
 
-    async function handleDeleteProfilePhoto() {
-        if (profilePhoto != defaultProfilePhoto) {
-            setDeleteStatus('Deleting');
-            await deleteFromS3(profilePhoto);
-            setProfilePhoto(defaultProfilePhoto);
-            setDeleteStatus('Delete Photo');
-        }
+    function handleDeleteProfilePhoto() {
+        setProfilePhoto(defaultProfilePhoto);
+        setProfilePhotoFile(null);
     }
 
     // helper function to format words into title case
@@ -284,6 +251,12 @@ function PhotographerEditForm(props) {
         <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
                 {/* <AlertSaveSuccessful /> */}
+                {alert && <div className='col'>
+                    <div className='alert alert-success alert-dismissible' role='alert'>
+                        <div>Profile changes saved</div>
+                        <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                    </div>
+                </div>}
             </div>
             <div id='form-contents' className='row align-items-start my-3'>
                 <div id='profile-info' className='col col-12 col-lg-8'>
@@ -384,10 +357,10 @@ function PhotographerEditForm(props) {
                 <div id='profile-photo' className='col col-6 col-md-3 col-lg-2 text-center'>
                     <img src={profilePhoto} className='rounded w-100 square-image object-fit-contain' alt='photographer profile image' />
                     <label htmlFor="profile-photo-upload" className="btn btn-link my-2">
-                        {uploadStatus}
+                        Select Photo
                     </label>
                     <input id="profile-photo-upload" type='file' hidden onChange={handleUploadProfilePhoto} />
-                    <button type='button' className='btn btn-link' onClick={handleDeleteProfilePhoto}>{deleteStatus}</button>
+                    <button type='button' className='btn btn-link' onClick={handleDeleteProfilePhoto}>Delete Photo</button>
                 </div>
             </div>
             <div id='form-actions' className='row justify-content-center mb-3'>
