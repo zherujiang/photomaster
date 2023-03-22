@@ -1,14 +1,14 @@
 import AWS from 'aws-sdk';
 
 export function useS3Bucket() {
-    // environment config
-    const BUCKET_NAME = 'photomasterbucket'
+    // environment config removed
+    const BUCKET_NAME = ''
 
     AWS.config.update({
-        accessKeyId: 'AKIAQRJG34B24IU25SOJ',
-        secretAccessKey: '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',
+        accessKeyId: '',
+        secretAccessKey: '',
         region: 'us-west-2',
-        signatureVersion: 'v4',
+        signatureVersion: '',
     })
     const s3 = new AWS.S3();
 

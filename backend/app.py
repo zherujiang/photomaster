@@ -13,6 +13,7 @@ from auth import requires_auth, AuthError
 import smtplib
 import boto3
 from botocore.config import Config
+from werkzeug.utils import secure_filename
 
 
 def create_app(database_path):
@@ -425,7 +426,7 @@ def create_app(database_path):
             can_travel = request_body.get('can_travel')
             address = request_body.get('address')
             services = request_body.get('services')
-            profile_photo = request_body.get('profile_photo')
+            profile_photo_url = request_body.get('profile_photo_url')
             portfolio_link = request_body.get('portfolio_link')
             bio = request_body.get('bio')
             price_values = request_body.get('price_values')
@@ -433,11 +434,13 @@ def create_app(database_path):
 
             default_profile_photo = S3_BUCKET_BASE_URL + \
                 'fixed_profile_photo_default_800.png'
-            if profile_photo != default_profile_photo and request.files:
+                
+            if profile_photo_url != default_profile_photo and request.files:
                 photo = request.files['image']
-                s3_filename = f'{int(time.time())}.{photo.filename}'
+                cleaned_filename = secure_filename(photo.filename)
+                s3_filename = f'{int(time.time())}.{cleaned_filename}'
                 if upload_to_s3(filename=s3_filename, file=photo):
-                    profile_photo = f'{S3_BUCKET_BASE_URL}{s3_filename}'
+                    profile_photo_url = f'{S3_BUCKET_BASE_URL}{s3_filename}'
 
             # update price for the current photographer
             price_query = Price.query.filter(
@@ -453,7 +456,7 @@ def create_app(database_path):
             photographer_query.can_travel = can_travel
             photographer_query.address = address
             photographer_query.services = services
-            photographer_query.profile_photo = profile_photo
+            photographer_query.profile_photo = profile_photo_url
             photographer_query.portfolio_link = portfolio_link
             photographer_query.bio = bio
             photographer_query.update()
@@ -530,9 +533,13 @@ def create_app(database_path):
                 }, 404
             )
 
+        # upload files to s3 bucket
         new_photos_list = request.files
         for photo in new_photos_list.getlist('image'):
-            s3_filename = f'{int(time.time())}.{photo.filename}'
+            # process filename to replace erroneous characters
+            cleaned_filename = secure_filename(photo.filename)
+            s3_filename = f'{int(time.time())}.{cleaned_filename}'
+            
             if upload_to_s3(filename=s3_filename, file=photo):
                 try:
                     new_photo = Photo(
@@ -579,6 +586,7 @@ def create_app(database_path):
                 }, 404
             )
 
+        # delete photo from s3
         data = request.get_json()
         selected_photos_list = data.get('selected_photos_list')
         for photo_url in selected_photos_list:
@@ -803,4 +811,4 @@ def delete_from_s3(filename):
 
 app = create_app(database_path=DB_PATH)
 if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+    app.run(debug=True)

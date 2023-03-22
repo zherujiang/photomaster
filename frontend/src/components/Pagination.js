@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function Pagination(props) {
     const { totalPhotographers, resultsPerPage, currentPage, handleSelectPage, handlePreviousPage, handleNextPage } = props;
@@ -13,7 +14,7 @@ function Pagination(props) {
     for (let i = 1; i <= totalPages; i++) {
         pages.push(
             <li key={i} className={`page-item ${currentPage == i ? 'active' : ''}`}>
-                <a className='page-link' href='#' onClick={handleSelectPage}>{i}</a>
+                <Link className='page-link' to='#' onClick={handleSelectPage}>{i}</Link>
             </li>
         );
     };
@@ -22,15 +23,15 @@ function Pagination(props) {
         <div aria-label='Page navigation'>
             <ul className='pagination justify-content-center'>
                 <li className={`page-item ${currentPage == 1 ? 'disabled' : ''}`}>
-                    <a className='page-link' href='#' aria-label='Previous' onClick={handlePreviousPage}>
+                    <Link className='page-link' href='#' aria-label='Previous' onClick={handlePreviousPage}>
                         <span aria-hidden='true'>&laquo;</span>
-                    </a>
+                    </Link>
                 </li>
                 {pages}
                 <li className={`page-item ${currentPage == totalPages ? 'disabled' : ''}`}>
-                    <a className='page-link' href='#' aria-label='Next' onClick={handleNextPage}>
+                    <Link className='page-link' href='#' aria-label='Next' onClick={handleNextPage}>
                         <span aria-hidden='true'>&raquo;</span>
-                    </a>
+                    </Link>
                 </li>
             </ul>
         </div>

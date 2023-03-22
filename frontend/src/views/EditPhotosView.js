@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAccessToken } from '../hooks/AuthHook';
-import { useS3Bucket } from '../hooks/S3Hook';
+// import { useS3Bucket } from '../hooks/S3Hook';
 import axios from "axios";
 import ErrorBoundary from '../components/ErrorBoundary';
 import '../stylesheets/PhotoGrid.css'
@@ -10,7 +10,7 @@ function EditPhotosView() {
     const { photographerId } = useParams();
     const [axiosError, setAxiosError] = useState(null);
     const { loadLocalJWT, JWTReady, buildAuthHeader } = useAccessToken();
-    const { uploadToS3, deleteFromS3 } = useS3Bucket();
+    // const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [existingPhotoURLs, setExistingPhotoURLs] = useState([]);
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
@@ -43,25 +43,24 @@ function EditPhotosView() {
         for (const file of e.target.files) {
             newPhotosList.append('image', file);
         }
-        
         axios.post(
             `/photos/${photographerId}`,
             newPhotosList,
             buildAuthHeader()
         )
-        .then(response => {
-            const data = response.data;
-            setExistingPhotoURLs(data['photo_urls'])
-            setUploadStatus('Upload photos');
-        })
-        .catch(error => {
-            setAxiosError(error);
-            console.log(error);
-        })
+            .then(response => {
+                const data = response.data;
+                setExistingPhotoURLs(data['photo_urls'])
+                setUploadStatus('Upload photos');
+            })
+            .catch(error => {
+                setAxiosError(error);
+                console.log(error);
+            })
     };
 
     async function handleDelete() {
-        if (selectedPhotos.length == 0) {
+        if (selectedPhotos.length === 0) {
             return;
         }
 
@@ -76,17 +75,17 @@ function EditPhotosView() {
                 }
             }
         )
-        .then(response => {
-            const data = response.data;
-            setExistingPhotoURLs(data['photo_urls'])
-        })
-        .catch(error => {
-            setAxiosError(error);
-            console.log(error);
-        })
-        
+            .then(response => {
+                const data = response.data;
+                setExistingPhotoURLs(data['photo_urls'])
+            })
+            .catch(error => {
+                setAxiosError(error);
+                console.log(error);
+            })
+
         setSelectedPhotos([]);
-        setDeleteStatus('Delete selected photos');        
+        setDeleteStatus('Delete selected photos');
     }
 
     function changeSelectedPhotos(e) {
@@ -107,7 +106,7 @@ function EditPhotosView() {
                     <div className='col' key={url}>
                         <img className={`w-100 square-image object-fit-cover 
                         ${selectedPhotos.includes(url) ? 'border border-2 border-danger' : ''}`}
-                            src={url} onClick={changeSelectedPhotos} />
+                            src={url} onClick={changeSelectedPhotos} alt='photo by photographer' />
                     </div>
                 ))}
             </div>

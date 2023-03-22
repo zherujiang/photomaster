@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from "axios";
 
 function PhotographerContactForm(props) {
@@ -17,7 +17,7 @@ function PhotographerContactForm(props) {
         // event.preventDefaut();
         setFormStatus('Sending...');
         const customerName = customerFirstName + ' ' + customerLastName;
-        const serviceName = offeredServices.filter((element) => element.id == requestedService)[0].name;
+        const serviceName = offeredServices.filter((element) => element.id === requestedService)[0].name;
         const emailDetails = {
             'customer_name': customerName,
             'customer_email': customerEmail,

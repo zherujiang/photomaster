@@ -24,7 +24,7 @@ class ErrorBoundary extends Component {
 
         if (hasError) {
             console.log('error', error)
-            if (error.name == 'AxiosError') {
+            if (error.name === 'AxiosError') {
                 const errorStatusCode = error.response.data.error;
                 const errorMessage = error.response.data.message;
 

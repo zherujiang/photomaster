@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessToken } from '../hooks/AuthHook';
-import { useS3Bucket } from '../hooks/S3Hook';
+// import { useS3Bucket } from '../hooks/S3Hook';
 import axios from "axios";
 import '../stylesheets/PhotoGrid.css'
 
@@ -10,7 +10,7 @@ function PhotographerEditForm(props) {
     const { photographerId } = props;
     const [axiosError, setAxiosError] = useState(null);
     const { JWTReady, buildAuthHeader } = useAccessToken();
-    const { uploadToS3, deleteFromS3 } = useS3Bucket();
+    // const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
@@ -21,7 +21,7 @@ function PhotographerEditForm(props) {
     const [city, setCity] = useState('');
     const [canTravel, setCanTravel] = useState(false);
     const [address, setAddress] = useState('');
-    const [profilePhoto, setProfilePhoto] = useState(null);
+    const [profilePhotoURL, setProfilePhotoURL] = useState(null);
     const [profilePhotoFile, setProfilePhotoFile] = useState(null);
     const [portfolioLink, setPortfolioLink] = useState('');
     const [bio, setBio] = useState('');
@@ -76,7 +76,7 @@ function PhotographerEditForm(props) {
             setCity(photographerDetails.city);
             setCanTravel(photographerDetails.can_travel);
             setAddress(photographerDetails.address);
-            setProfilePhoto(photographerDetails.profile_photo);
+            setProfilePhotoURL(photographerDetails.profile_photo);
             setPortfolioLink(photographerDetails.portfolio_link);
             setBio(photographerDetails.bio);
             setOfferedServices(photographerDetails.services);
@@ -95,7 +95,7 @@ function PhotographerEditForm(props) {
             'can_travel': canTravel,
             'address': address,
             'services': offeredServices,
-            'profile_photo': profilePhoto,
+            'profile_photo_url': profilePhotoURL,
             'portfolio_link': portfolioLink,
             'bio': bio,
             'price_values': priceValues,
@@ -121,7 +121,7 @@ function PhotographerEditForm(props) {
                     navigate('/account');
                 }, 2000);
             })
-            .catch(function (error) {
+            .catch(error => {
                 setAxiosError(error);
                 console.log(error);
             })
@@ -185,7 +185,7 @@ function PhotographerEditForm(props) {
         const elementId = event.target.id.split('-');
         const priceId = parseInt(elementId[2]);
 
-        if (elementId[1] == 'price') {
+        if (elementId[1] === 'price') {
             let newPriceValues = [...priceValues];
             newPriceValues[priceId - 1] = parseFloat(event.target.value);
             setPriceValues(newPriceValues);
@@ -197,17 +197,18 @@ function PhotographerEditForm(props) {
     }
 
     function handleUploadProfilePhoto(e) {
-        if (e.target.files.length == 0) {
+        if (e.target.files.length === 0) {
             return;
         }
 
         const file = e.target.files[0];
-        setProfilePhoto(URL.createObjectURL(file));
+        setProfilePhotoURL(URL.createObjectURL(file));
         setProfilePhotoFile(file);
+        // console.log('profile photo url', URL.createObjectURL(file));
     }
 
     function handleDeleteProfilePhoto() {
-        setProfilePhoto(defaultProfilePhoto);
+        setProfilePhotoURL(defaultProfilePhoto);
         setProfilePhotoFile(null);
     }
 
@@ -227,8 +228,8 @@ function PhotographerEditForm(props) {
         return titleCasedString;
     }
 
-    function AlertSaveSuccessful(response_status) {
-        if (response_status = true) {
+    function AlertSaveSuccessful() {
+        if (alert) {
             return (
                 <div className='col'>
                     <div className='alert alert-success alert-dismissible' role='alert'>
@@ -250,13 +251,7 @@ function PhotographerEditForm(props) {
     return (
         <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
-                {/* <AlertSaveSuccessful /> */}
-                {alert && <div className='col'>
-                    <div className='alert alert-success alert-dismissible' role='alert'>
-                        <div>Profile changes saved</div>
-                        <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-                    </div>
-                </div>}
+                <AlertSaveSuccessful />
             </div>
             <div id='form-contents' className='row align-items-start my-3'>
                 <div id='profile-info' className='col col-12 col-lg-8'>
@@ -355,7 +350,7 @@ function PhotographerEditForm(props) {
                     </div>
                 </div>
                 <div id='profile-photo' className='col col-6 col-md-3 col-lg-2 text-center'>
-                    <img src={profilePhoto} className='rounded w-100 square-image object-fit-contain' alt='photographer profile image' />
+                    <img src={profilePhotoURL} className='rounded w-100 square-image object-fit-cover' alt='photographer profile photo' />
                     <label htmlFor="profile-photo-upload" className="btn btn-link my-2">
                         Select Photo
                     </label>

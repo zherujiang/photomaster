@@ -92,14 +92,17 @@ function SearchResultsView(props) {
 
     // pagination functions
     function handleSelectPage(event) {
+        event.preventDefault();
         setCurrentPage(parseInt(event.target.innerHTML));
     }
 
-    function handlePreviousPage() {
+    function handlePreviousPage(event) {
+        event.preventDefault();
         setCurrentPage(currentPage - 1);
     }
 
-    function handleNextPage() {
+    function handleNextPage(event) {
+        event.preventDefault();
         setCurrentPage(currentPage + 1);
     }
 
