@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import axios from "axios";
 
 function PhotographerContactForm(props) {
-    const { selectedService, offeredServices, photographerEmail } = props;
+    const { selectedService, offeredServices, photographerEmail, photographerName } = props;
     const [axiosError, setAxiosError] = useState(null);
+    const [emailDeliverySuccessful, setEmailDeliverySuccessful] = useState(false);
 
     const [formStatus, setFormStatus] = useState('Submit');
     const [requestedService, setRequestedService] = useState(selectedService);
@@ -14,7 +15,7 @@ function PhotographerContactForm(props) {
     const [customMessage, setCustomMessage] = useState(undefined);
 
     function handleSubmitForm(event) {
-        // event.preventDefaut();
+        event.preventDefault();
         setFormStatus('Sending...');
         const customerName = customerFirstName + ' ' + customerLastName;
         const serviceName = offeredServices.filter((element) => element.id === requestedService)[0].name;
@@ -25,20 +26,21 @@ function PhotographerContactForm(props) {
             'service_name': serviceName,
             'custom_message': customMessage,
         }
-        // console.log(emailDetails);
-        sendContactForm(emailDetails);
+        sendContactEmail(emailDetails);
         setFormStatus('Submit');
     }
 
-    function sendContactForm(emailDetails) {
+    function sendContactEmail(emailDetails) {
         axios.post(
             '/emails',
             {
                 recipient: photographerEmail,
-                email_details: emailDetails
+                recipient_name: photographerName,
+                email_details: emailDetails,
             })
             .then(response => {
                 const data = response.data;
+                setEmailDeliverySuccessful(true);
                 console.log(data);
             })
             .catch(function (error) {
@@ -61,14 +63,29 @@ function PhotographerContactForm(props) {
             case 'customerPhone':
                 setCustomerPhone(event.target.value);
                 break;
+            case 'requestedService':
+                setRequestedService(event.target.value);
+                break;
             case 'customMessage':
                 setCustomMessage(event.target.value);
                 break;
         }
     }
 
-    function handleSetRequestedService(event) {
-        setRequestedService(event.target.value);
+    function EmailDeliverySuccessfulAlert() {
+        if (emailDeliverySuccessful) {
+            // setEmailDeliverySuccessful(false);
+            return (
+                <div className='row'>
+                    <div className='alert alert-success alert-dismissible' role='alert'>
+                        <div>Email sent</div>
+                        <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                    </div>
+                </div>
+            )
+        } else {
+            return null
+        }
     }
 
     // when there is an axios error, throw the error to be handled by ErrorBoundary
@@ -82,6 +99,7 @@ function PhotographerContactForm(props) {
     return (
         <div id='contact-form' className='col col-12 col-lg-3'>
             <AxiosError />
+            <EmailDeliverySuccessfulAlert />
             <form className='border rounded p-4'>
                 <div className='row mb-3'>
                     <div className='col'>
@@ -91,29 +109,29 @@ function PhotographerContactForm(props) {
                 <div className='row g-3 mb-3'>
                     <div className='col'>
                         <input type='text' placeholder='First name' className='form-control' aria-label='First name'
-                            name='firstName' value={customerFirstName} onChange={handleInputChange} />
+                            name='firstName' value={customerFirstName} onChange={handleInputChange} required='required' />
                     </div>
                     <div className='col'>
                         <input type='text' placeholder='Last name' className='form-control' aria-label='Last name'
-                            name='lastName' value={customerLastName} onChange={handleInputChange} />
+                            name='lastName' value={customerLastName} onChange={handleInputChange} required='required' />
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
                         <input type='text' placeholder='Your email' className='form-control' aria-label='email'
-                            name='customerEmail' value={customerEmail} onChange={handleInputChange} />
+                            name='customerEmail' value={customerEmail} onChange={handleInputChange} required='required' />
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
                         <input type='text' placeholder='Phone' className='form-control' aria-label='phone'
-                            name='customerPhone' value={customerPhone} onChange={handleInputChange} />
+                            name='customerPhone' value={customerPhone} onChange={handleInputChange} required='required' />
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <select className='form-select' value={requestedService}
-                            onChange={handleSetRequestedService}>
+                        <select className='form-select' name='requestedService' value={requestedService}
+                            onChange={handleInputChange}>
                             {offeredServices.map((category) => (
                                 <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
                             ))}
@@ -128,7 +146,7 @@ function PhotographerContactForm(props) {
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <button type='button' onClick={handleSubmitForm} className='btn btn-primary w-100'>{formStatus}</button>
+                        <button type='submit' onClick={handleSubmitForm} className='btn btn-primary w-100'>{formStatus}</button>
                     </div>
                 </div>
             </form>

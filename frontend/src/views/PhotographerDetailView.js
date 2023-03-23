@@ -166,7 +166,8 @@ function PhotographerDetailView(props) {
                     <PhotographerContactForm
                         selectedService={selectedService}
                         offeredServices={offeredServices}
-                        photographerEmail={email} />
+                        photographerEmail={email}
+                        photographerName={name} />
                 </div>
             )
         } else {

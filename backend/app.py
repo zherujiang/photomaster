@@ -8,8 +8,7 @@ from models import setup_db, Photographer, Service, Photo, Price
 from flask_cors import CORS, cross_origin
 from settings import DB_PATH, UPLOAD_BUCKET_NAME, S3_REGION, S3_ACCESSKEYID, S3_SECRETACCESSKEY, S3_SIGNATUREVERSION, S3_BUCKET_BASE_URL
 from auth import requires_auth, AuthError
-# from flask_mail import Mail, Message
-# from settings import MAIL_USERNAME, MAIL_PASSWORD
+from settings import MAILTRAP_USERNAME, MAILTRAP_PASSWORD
 import smtplib
 import boto3
 from botocore.config import Config
@@ -21,15 +20,6 @@ def create_app(database_path):
                 static_url_path='')
     setup_db(app, database_path)
     CORS(app)
-
-    # mail service config (using mailtrap)
-    # mail = Mail(app)
-    # app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
-    # app.config['MAIL_PORT'] = 2525
-    # app.config['MAIL_USERNAME'] = MAIL_USERNAME
-    # app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
-    # app.config['MAIL_USE_TLS'] = True
-    # app.config['MAIL_USE_SSL'] = False
 
     # serve frontend React app
     @app.route('/')
@@ -615,39 +605,21 @@ def create_app(database_path):
     @app.route('/emails', methods=['POST'])
     def send_email():
         request_body = request.get_json()
-        # print('email request body', request_body)
 
         recipient = request_body.get('recipient')
+        recipient_name = request_body.get('recipient_name')
         email = request_body.get('email_details')
-
-        print('recipient', recipient)
-        print('email', email)
 
         try:
             # send email with smtplib
-            smtplib_send(recipient, email)
-            return jsonify({
-                'success': True,
-                'email': 'Sent'
-            })
+            delivery_status = smtplib_send(recipient, recipient_name, email)
         except:
             abort(400)
-
-        # send email with mailtrap API
-        # mailtrap_url = "https://send.api.mailtrap.io/api/send"
-        # payload = "{\"from\":{\"email\":\"mailtrap@cheryl-jiang.com\",\"name\":\"Mailtrap Test\"},\"to\":[{\"email\":\"cheryl.zjiang@gmail.com\"}],\"subject\":\"You are awesome!\",\"text\":\"Congrats for sending test email with Mailtrap!\",\"category\":\"Integration Test\"}"
-        # headers = {
-        # "Authorization": "Bearer ",
-        # "Content-Type": "application/json"
-        # }
-        # response = requests.request("POST", mailtrap_url, headers=headers, data=payload)
-
-        # send email with Flask-mail
-        # msg = Message('A customer is interested in your photography', sender = 'photomaster@cheryl-jiang.com', recipients = [recipient])
-        # msg.body = 'Congratulations! A customer found you on Photomaster and is interested in working with you!'
-        # print(msg)
-        # mail.send(msg)
-        # return 'Sent'
+            
+        return jsonify({
+            'success': True,
+            'delivery_status': delivery_status
+        })
 
     '''
     error handling
@@ -715,34 +687,33 @@ def create_app(database_path):
 
 
 # send email to photographers using smtplib
-def smtplib_send(recipient, email):
+def smtplib_send(recipient, recipient_name, email):
     customer_name = email.get('customer_name', 'Anonymous')
     customer_email = email.get('customer_email', 'Not provided')
     customer_phone = email.get('customer_phone', 'Not provided')
     service_name = email.get('service_name', 'Not provided')
 
     sender = "Photomaster <photomaster@cheryl-jiang.com>"
-    receiver = f"A Test User <{recipient}>"
+    receiver = f"{recipient_name} <{recipient}>"
 
     message = f"""\
 Subject: A customer is interested in your photography
 To: {receiver}
 From: {sender}
 
-Congratulations! A customer {customer_name} found you on Photomaster and is interested in working with you!
-{customer_name} is interested in your {service_name} photography. You can follow up with them using the provided customer contacts below:
-Customer Email: {customer_email}
-Cusomter Phone: {customer_phone}"""
-
-    try:
-        with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as server:
-            server.login("cceaa5b31ffd1d", "1f9fd5996ea273")
-            server.sendmail(sender, receiver, message)
-    except Exception as e:
-        print(e)
-
+Congratulations! A customer {customer_name} found you on Photomaster and is interested in working with you!\r\n
+{customer_name} is interested in your {service_name} photography. You can follow up with them using the provided customer contacts below:\r\n
+Customer Email: {customer_email}\r\n
+Cusomter Phone: {customer_phone}\r\n
+Sincerely,\r\n
+Photomaster"""
+        
+    with smtplib.SMTP("live.smtp.mailtrap.io", 2525) as server:
+        server.starttls()
+        server.login(MAILTRAP_USERNAME, MAILTRAP_PASSWORD)
+        server.sendmail(sender, receiver, message)
+        
     return 'Sent'
-
 
 # helper function to return a city based on the zip code entered
 def find_city(location):

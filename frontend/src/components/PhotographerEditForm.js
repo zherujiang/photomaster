@@ -28,7 +28,7 @@ function PhotographerEditForm(props) {
     const [offeredServices, setOfferedServices] = useState([]);
     const [priceValues, setPriceValues] = useState([]);
     const [priceTypes, setPriceTypes] = useState([]);
-    const [alert, setAlert] = useState(false)
+    const [updateSuccessful, setUpdateSuccessful] = useState(false);
 
     const defaultProfilePhoto = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/fixed_profile_photo_default_800.png'
 
@@ -116,7 +116,7 @@ function PhotographerEditForm(props) {
                 const data = response.data;
                 setPhotographerDetails(data['photographer_details']);
                 setPrices(data['prices']);
-                setAlert(true);
+                setUpdateSuccessful(true);
                 setTimeout(() => {
                     navigate('/account');
                 }, 2000);
@@ -228,8 +228,8 @@ function PhotographerEditForm(props) {
         return titleCasedString;
     }
 
-    function AlertSaveSuccessful() {
-        if (alert) {
+    function UpdateSuccessfulAlert() {
+        if (updateSuccessful) {
             return (
                 <div className='col'>
                     <div className='alert alert-success alert-dismissible' role='alert'>
@@ -251,7 +251,7 @@ function PhotographerEditForm(props) {
     return (
         <div id='photographer-edit-form'>
             <div id='alert-placeholder' className='row'>
-                <AlertSaveSuccessful />
+                <UpdateSuccessfulAlert />
             </div>
             <div id='form-contents' className='row align-items-start my-3'>
                 <div id='profile-info' className='col col-12 col-lg-8'>

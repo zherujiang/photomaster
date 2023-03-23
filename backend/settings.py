@@ -18,8 +18,8 @@ AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
 ALGORITHMS = os.environ.get('ALGORITHMS')
 API_AUDIENCE = os.environ.get('API_AUDIENCE')
 
-MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+MAILTRAP_USERNAME = os.environ.get('MAILTRAP_USERNAME')
+MAILTRAP_PASSWORD = os.environ.get('MAILTRAP_PASSWORD')
 
 # compose database_path
 db_user_credentials = DB_USER + ":" + DB_PASSWORD
