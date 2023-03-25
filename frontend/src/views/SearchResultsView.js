@@ -11,7 +11,7 @@ function SearchResultsView(props) {
 
     const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState(undefined);
-    const [selectedCity, setSelectedCity] = useState('');
+    const [nearLocation, setNearLocation] = useState('');
     const [totalPhotographers, setTotalPhotographers] = useState(0);
     const [photographers, setPhotographers] = useState([]);
     const [acceptTravel, setAcceptTravel] = useState(false);
@@ -19,6 +19,7 @@ function SearchResultsView(props) {
     const [resultsPerPage, setResultsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState('name');
+    const [queryErrors, setQueryErrors] = useState({});
 
     // server request to get all service categories
     function getServices() {
@@ -34,7 +35,7 @@ function SearchResultsView(props) {
     }
 
     // server request to search photographers
-    function findPhotographers(service = selectedService, city = selectedCity) {
+    function findPhotographers(service = selectedService, city = nearLocation) {
         axios.get('/photographers', {
             params: {
                 service: service,
@@ -57,37 +58,64 @@ function SearchResultsView(props) {
             })
     }
 
-    // handle user interactions to control search criteria
-    function handleSelectService(event) {
-        setSelectedService(event.target.value);
+    // handle user interactions to set the search query
+    function handleInputChange(event) {
+        switch (event.target.name) {
+            case 'selectService':
+                setSelectedService(event.target.value);
+                if (!!queryErrors[selectedService]) {
+                    setQueryErrors({
+                        ...queryErrors,
+                        ['selectedService']: null
+                    })
+                }
+                console.log(queryErrors);
+                break;
+            case 'locationInput':
+                setNearLocation(event.target.value);
+                if (!!queryErrors[nearLocation]) {
+                    setQueryErrors({
+                        ...queryErrors,
+                        [nearLocation]: null
+                    })
+                }
+                console.log(queryErrors);
+                break;
+            case 'travelToggle':
+                setAcceptTravel(!acceptTravel);
+                break;
+            case 'priceSlider':
+                setMaxPrice(event.target.value);
+                break;
+            case 'selectSortBy':
+                setSortBy(event.target.value);
+                break;
+            case 'resultsPerPage':
+                setResultsPerPage(event.target.value);
+                setCurrentPage(1);
+                break;
+        }
     }
 
-    function handleCityChange(event) {
-        setSelectedCity(event.target.value);
-    }
-
-    function handleToggleTravel() {
-        setAcceptTravel(!acceptTravel);
+    function validateSearchQuery() {
+        const newErrors = {};
+        if (!selectedService || selectedService === '') {
+            newErrors.selectedService = 'Please select a type of photography'
+        }
+        if (!nearLocation || nearLocation === '') {
+            newErrors.nearLocation = 'Please enter a city or zip code'
+        }
+        return newErrors;
     }
 
     function submitSearch(e) {
         e.preventDefault();
-        if (selectedService && selectedCity) {
+        const queryValidationErrors = validateSearchQuery();
+        if (Object.keys(queryValidationErrors).length > 0) {
+            setQueryErrors(queryValidationErrors);
+        } else {
             findPhotographers();
         }
-    }
-
-    function handleSetMaxPrice(event) {
-        setMaxPrice(event.target.value);
-    }
-
-    function handleSelectSortBy(event) {
-        setSortBy(event.target.value);
-    }
-
-    function handleSelectResultsPerPage(event) {
-        setResultsPerPage(event.target.value);
-        setCurrentPage(1);
     }
 
     // pagination functions
@@ -111,14 +139,14 @@ function SearchResultsView(props) {
         getServices();
         if (location.state) {
             setSelectedService(location.state.selectedService);
-            setSelectedCity(location.state.selectedCity);
-            findPhotographers(location.state.selectedService, location.state.selectedCity);
+            setNearLocation(location.state.nearLocation);
+            findPhotographers(location.state.selectedService, location.state.nearLocation);
         }
     }, [])
 
     //reload search results when user selects page or change results per page
     useEffect(() => {
-        if (selectedService && selectedCity) {
+        if (selectedService && nearLocation) {
             findPhotographers();
         }
     }, [currentPage, resultsPerPage, acceptTravel, maxPrice, sortBy])
@@ -140,19 +168,23 @@ function SearchResultsView(props) {
                         <div className='col col-12 col-md-6 col-lg-5 mb-3'>
                             <div className='input-group'>
                                 <label className='input-group-text' htmlFor='serviceCategory'>Photo Service</ label>
-                                <select className='form-select' id='serviceCategory'
-                                    value={selectedService} onChange={handleSelectService}>
+                                <select id='serviceCategory' name='selectService'
+                                    className={`form-select ${queryErrors.selectedService ? 'is-invalid' : ''}`}
+                                    value={selectedService} onChange={handleInputChange}>
                                     {services.map((category) => (
                                         <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
                                     ))}
                                 </select>
+                                {/* <div className='invalid-feedback'>{queryErrors.selectedService}</div> */}
                             </div>
                         </div>
                         <div className='col col-12 col-md-6 col-lg-5 mb-3'>
                             <div className='input-group'>
-                                <label className='input-group-text' htmlFor='city'>Near</label>
-                                <input type='text' className='form-control' id='city' aria-label='City'
-                                    placeholder='Enter city or zip code' value={selectedCity} onChange={handleCityChange} required />
+                                <label className='input-group-text' htmlFor='location'>Near</label>
+                                <input type='text' id='location' aria-label='location'
+                                    className={`form-control ${queryErrors.nearLocation ? 'is-invalid' : ''}`}
+                                    placeholder='Enter city or zip code' name='locationInput' value={nearLocation} onChange={handleInputChange} required />
+                                {/* <div className='invalid-feedback'>{queryErrors.nearLocation}</div> */}
                             </div>
                         </div>
                         <div className='col col-12 col-md-4 col-lg-2 mb-3 d-grid'>
@@ -171,13 +203,13 @@ function SearchResultsView(props) {
                                         <label className='form-check-label' htmlFor='defaultLocation'>Local photographers</label>
                                     </div>
                                     <div className='form-check'>
-                                        <input className='form-check-input' type='checkbox' id='flexibleLocation' onChange={handleToggleTravel} />
+                                        <input className='form-check-input' type='checkbox' id='flexibleLocation' name='travelToggle' onChange={handleInputChange} />
                                         <label className='form-check-label' htmlFor='flexibleLocation'>Traveling photographers</label>
                                     </div>
                                 </div>
                                 <div id='slide-container' className='mb-3'>
                                     <label htmlFor='priceRange'>Price Range</label>
-                                    <input type='range' min='1' max='1000' value={maxPrice} onChange={handleSetMaxPrice}
+                                    <input type='range' min='1' max='1000' name='priceSlider' value={maxPrice} onChange={handleInputChange}
                                         className='slider d-block w-100 mt-2' id='priceRange' />
                                     <span>{`$0 - $${maxPrice}`}</span>
                                 </div>
@@ -191,7 +223,7 @@ function SearchResultsView(props) {
                                 <div className='col col-4'>
                                     <div className='input-group'>
                                         <label className='input-group-text' htmlFor='sortBy'>Sort by</ label>
-                                        <select value={sortBy} className='form-select' id='sortBy' onChange={handleSelectSortBy}>
+                                        <select value={sortBy} name='selectSortBy' className='form-select' id='sortBy' onChange={handleInputChange}>
                                             <option value={'name'}>Name (A to Z)</option>
                                             <option value={'price_up'}>price low to high</option>
                                             <option value={'price_down'}>price high to low</option>
@@ -223,8 +255,8 @@ function SearchResultsView(props) {
                                 <div className='col col-12 col-sm-4'>
                                     <div className='input-group'>
                                         <label className='input-group-text' htmlFor='resultsPerPage'>Results per page</ label>
-                                        <select className='form-select' id='resultsPerPage'
-                                            value={resultsPerPage} onChange={handleSelectResultsPerPage}>
+                                        <select className='form-select' id='resultsPerPage' name='resultsPerPage'
+                                            value={resultsPerPage} onChange={handleInputChange}>
                                             <option value={5}>5</option>
                                             <option value={10}>10</option>
                                             <option value={15}>15</option>

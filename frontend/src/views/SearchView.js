@@ -8,7 +8,7 @@ function SearchView(props) {
     const [axiosError, setAxiosError] = useState(null);
     const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState(null);
-    const [selectedCity, setSelectedCity] = useState(null);
+    const [nearLocation, setNearLocation] = useState('');
 
     const navigate = useNavigate();
 
@@ -29,16 +29,16 @@ function SearchView(props) {
     }
 
     function handleCityChange(event) {
-        setSelectedCity(event.target.value);
+        setNearLocation(event.target.value);
     }
 
     function submitSearch(e) {
         e.preventDefault();
-        if (selectedService && selectedCity) {
+        if (selectedService && nearLocation) {
             navigate('/searchresults', {
                 state: {
                     'selectedService': selectedService,
-                    'selectedCity': selectedCity
+                    'nearLocation': nearLocation
                 }
             })
         }
@@ -111,7 +111,7 @@ function SearchView(props) {
                                 <div className='input-group'>
                                     <span className='input-group-text'>Location</span>
                                     <input type='text' className='form-control' id='city' placeholder='City or zip code' aria-label='City'
-                                        onChange={handleCityChange} required='required' />
+                                        value={nearLocation} onChange={handleCityChange} />
                                     <button type='submit' className='btn btn-primary' onClick={submitSearch}>Search</button>
                                 </div>
                             </div>

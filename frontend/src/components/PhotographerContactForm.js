@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from "axios";
 
 function PhotographerContactForm(props) {
@@ -7,27 +7,67 @@ function PhotographerContactForm(props) {
     const [emailDeliverySuccessful, setEmailDeliverySuccessful] = useState(false);
 
     const [formStatus, setFormStatus] = useState('Submit');
-    const [requestedService, setRequestedService] = useState(selectedService);
-    const [customerFirstName, setCustomerFirstName] = useState(undefined);
-    const [customerLastName, setCustomerLastName] = useState(undefined);
-    const [customerEmail, setCustomerEmail] = useState(undefined);
-    const [customerPhone, setCustomerPhone] = useState(undefined);
-    const [customMessage, setCustomMessage] = useState(undefined);
+    const [formData, setFormData] = useState({});
+    const [formErrors, setFormErrors] = useState({});
+
+    formData['requestedService'] = selectedService;
+
+    function handleFormInput(field, value) {
+        setFormData({
+            ...formData,
+            [field]: value
+        });
+
+        // reset form error for the current field
+        if (!!formErrors[field]) {
+            setFormErrors({
+                ...formErrors,
+                [field]: null
+            })
+        }
+    }
+
+    function validateForm() {
+        const newErrors = {};
+        const { customerFirstName, customerLastName, customerEmail, customerPhone, requestedService, customMessage } = formData;
+        if (!customerFirstName || customerFirstName === '') {
+            newErrors.customerFirstName = 'Please enter your first name'
+        };
+        if (!customerLastName || customerLastName === '') {
+            newErrors.customerLastName = 'Please enter your last name'
+        };
+        if (!customerEmail || customerEmail === '') {
+            newErrors.customerEmail = 'Please enter your email'
+        };
+        if (!customerPhone || customerPhone === '') {
+            newErrors.customerPhone = 'Please enter your email'
+        };
+        if (!requestedService) {
+            newErrors.requestedService = 'Please select a photography service'
+        };
+        return newErrors;
+    }
 
     function handleSubmitForm(event) {
         event.preventDefault();
-        setFormStatus('Sending...');
-        const customerName = customerFirstName + ' ' + customerLastName;
-        const serviceName = offeredServices.filter((element) => element.id === requestedService)[0].name;
-        const emailDetails = {
-            'customer_name': customerName,
-            'customer_email': customerEmail,
-            'customer_phone': customerPhone,
-            'service_name': serviceName,
-            'custom_message': customMessage,
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setFormErrors(validationErrors);
+        } else {
+            setFormStatus('Sending...');
+            const customerName = formData.customerFirstName + ' ' + formData.customerLastName;
+            const selectedServiceType = offeredServices.filter((element) => element.id === formData.requestedService)[0];
+            const serviceName = selectedServiceType.name;
+            const emailDetails = {
+                'customer_name': titleCase(customerName),
+                'customer_email': formData.customerEmail,
+                'customer_phone': formData.customerPhone,
+                'service_name': titleCase(serviceName),
+                'custom_message': formData.customMessage,
+            }
+            sendContactEmail(emailDetails);
+            setFormStatus('Submit');
         }
-        sendContactEmail(emailDetails);
-        setFormStatus('Submit');
     }
 
     function sendContactEmail(emailDetails) {
@@ -41,6 +81,9 @@ function PhotographerContactForm(props) {
             .then(response => {
                 const data = response.data;
                 setEmailDeliverySuccessful(true);
+                setTimeout(() => {
+                    setEmailDeliverySuccessful(false);
+                }, 2000);
                 console.log(data);
             })
             .catch(function (error) {
@@ -49,32 +92,24 @@ function PhotographerContactForm(props) {
             })
     }
 
-    function handleInputChange(event) {
-        switch (event.target.name) {
-            case 'firstName':
-                setCustomerFirstName(event.target.value);
-                break;
-            case 'lastName':
-                setCustomerLastName(event.target.value);
-                break;
-            case 'customerEmail':
-                setCustomerEmail(event.target.value);
-                break;
-            case 'customerPhone':
-                setCustomerPhone(event.target.value);
-                break;
-            case 'requestedService':
-                setRequestedService(event.target.value);
-                break;
-            case 'customMessage':
-                setCustomMessage(event.target.value);
-                break;
+    // helper function to format words into title case
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function titleCase(string) {
+        const words = string.split(' ');
+        let titleCasedString = '';
+        for (let i = 0; i < words.length; i++) {
+            titleCasedString += capitalizeFirstLetter(words[i])
+            if (i < words.length - 1) {
+                titleCasedString += ' '
+            }
         }
+        return titleCasedString;
     }
 
     function EmailDeliverySuccessfulAlert() {
         if (emailDeliverySuccessful) {
-            // setEmailDeliverySuccessful(false);
             return (
                 <div className='row'>
                     <div className='alert alert-success alert-dismissible' role='alert'>
@@ -100,7 +135,7 @@ function PhotographerContactForm(props) {
         <div id='contact-form' className='col col-12 col-lg-3'>
             <AxiosError />
             <EmailDeliverySuccessfulAlert />
-            <form className='border rounded p-4'>
+            <form className='border rounded p-4 mb-3'>
                 <div className='row mb-3'>
                     <div className='col'>
                         <h5>Contact Photographer</h5>
@@ -108,40 +143,46 @@ function PhotographerContactForm(props) {
                 </div>
                 <div className='row g-3 mb-3'>
                     <div className='col'>
-                        <input type='text' placeholder='First name' className='form-control' aria-label='First name'
-                            name='firstName' value={customerFirstName} onChange={handleInputChange} required='required' />
+                        <input type='text' placeholder='First name' className={`form-control ${formErrors.customerFirstName ? 'is-invalid' : ''}`} aria-label='First name'
+                            value={formData.customerFirstName} onChange={(e) => handleFormInput('customerFirstName', e.target.value)} />
+                        <div className='invalid-feedback'>{formErrors.customerFirstName}</div>
                     </div>
                     <div className='col'>
-                        <input type='text' placeholder='Last name' className='form-control' aria-label='Last name'
-                            name='lastName' value={customerLastName} onChange={handleInputChange} required='required' />
-                    </div>
-                </div>
-                <div className='row mb-3'>
-                    <div className='col'>
-                        <input type='text' placeholder='Your email' className='form-control' aria-label='email'
-                            name='customerEmail' value={customerEmail} onChange={handleInputChange} required='required' />
+                        <input type='text' placeholder='Last name' className={`form-control ${formErrors.customerLastName ? 'is-invalid' : ''}`} aria-label='Last name'
+                            value={formData.customerLastName} onChange={(e) => handleFormInput('customerLastName', e.target.value)} />
+                        <div className='invalid-feedback'>{formErrors.customerLastName}</div>
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <input type='text' placeholder='Phone' className='form-control' aria-label='phone'
-                            name='customerPhone' value={customerPhone} onChange={handleInputChange} required='required' />
+                        <input type='email' placeholder='Your email' className={`form-control ${formErrors.customerEmail ? 'is-invalid' : ''}`} aria-label='email'
+                            value={formData.customerEmail} onChange={(e) => handleFormInput('customerEmail', e.target.value)} />
+                        <div className='invalid-feedback'>{formErrors.customerEmail}</div>
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <select className='form-select' name='requestedService' value={requestedService}
-                            onChange={handleInputChange}>
+                        <input type='text' placeholder='Phone' className={`form-control ${formErrors.customerPhone ? 'is-invalid' : ''}`} aria-label='phone'
+                            value={formData.customerPhone} onChange={(e) => handleFormInput('customerPhone', e.target.value)} />
+                        <div className='invalid-feedback'>{formErrors.customerPhone}</div>
+                    </div>
+                </div>
+                <div className='row mb-3'>
+                    <div className='col'>
+                        <select className={`form-select ${formErrors.requestedService ? 'is-invalid' : ''}`} value={formData.requestedService}
+                            onChange={(selected) => handleFormInput('requestedService', selected)}>
                             {offeredServices.map((category) => (
                                 <option key={`service-option-${category.id}`} value={category.id}>{category.name}</option>
                             ))}
                         </select>
+                        <div className='invalid-feedback'>{formErrors.requestedService}</div>
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
                         <label htmlFor='custom-message' className='form-label'>Message</label>
-                        <textarea id='custom-message' className='form-control' rows='3' name='customMessage' onChange={handleInputChange}>{customMessage}</textarea>
+                        <textarea id='custom-message' className='form-control' rows='3' name='customMessage'
+                            value={formData.customMessage} onChange={(e) => handleFormInput('customMessage', e.target.value)}></textarea>
                     </div>
                 </div>
                 <div className='row mb-3'>

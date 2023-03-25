@@ -2,7 +2,7 @@
   "name": "photomaster",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://photomaster.herokuapp.com/",
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@auth0/auth0-react": "^2.0.1",
     "@chakra-ui/react": "^2.5.1",
