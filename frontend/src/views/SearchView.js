@@ -9,6 +9,7 @@ function SearchView(props) {
     const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState(null);
     const [nearLocation, setNearLocation] = useState('');
+    const [queryErrors, setQueryErrors] = useState({});
 
     const navigate = useNavigate();
 
@@ -25,16 +26,48 @@ function SearchView(props) {
     }
 
     function handleSelectCategory(id) {
-        setSelectedService(selectedService === id ? null : id)
+        setSelectedService(selectedService === id ? null : id);
+        // reset query error for the current field
+        if (queryErrors['selectedService']) {
+            setQueryErrors({
+                ...queryErrors,
+                ['selectedService']: null
+            })
+        }
     }
 
-    function handleCityChange(event) {
+    function handleLocationChange(event) {
         setNearLocation(event.target.value);
+        // reset query error for the current field
+        if (queryErrors['nearLocation']) {
+            setQueryErrors({
+                ...queryErrors,
+                ['nearLocation']: null
+            })
+        }
+    }
+
+    function validateSearchQuery() {
+        const newErrors = {};
+        if (!selectedService) {
+            newErrors.selectedService = 'Please select a type of photography'
+        }
+        if (!nearLocation || nearLocation === '') {
+            newErrors.nearLocation = 'Please enter a city or zip code'
+        }
+        return newErrors;
     }
 
     function submitSearch(e) {
         e.preventDefault();
-        if (selectedService && nearLocation) {
+        const queryValidationErrors = validateSearchQuery();
+
+        if (Object.keys(queryValidationErrors).length > 0) {
+            setQueryErrors(queryValidationErrors);
+            console.log('queryErrors:', queryErrors);
+            console.log('service error:', queryErrors.selectedService);
+            console.log('location error:', queryErrors.nearLocation);
+        } else {
             navigate('/searchresults', {
                 state: {
                     'selectedService': selectedService,
@@ -44,7 +77,7 @@ function SearchView(props) {
         }
     }
 
-    // helper function to format words intotitle case
+    // helper function to format words into title case
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
@@ -93,6 +126,7 @@ function SearchView(props) {
                 <ErrorBoundary>
                     <AxiosError />
                     <h4 className='my-4'>Find photographers for</h4>
+                    <div className='my-3 text-danger'>{queryErrors.selectedService}</div>
                     <div className='row row-cols-2 row-cols-sm-3 row-cols-lg-5 align-items-center mb-3'>
                         {services.map((category) => (
                             <ServiceCategory
@@ -111,9 +145,10 @@ function SearchView(props) {
                                 <div className='input-group'>
                                     <span className='input-group-text'>Location</span>
                                     <input type='text' className='form-control' id='city' placeholder='City or zip code' aria-label='City'
-                                        value={nearLocation} onChange={handleCityChange} />
+                                        value={nearLocation} onChange={handleLocationChange} />
                                     <button type='submit' className='btn btn-primary' onClick={submitSearch}>Search</button>
                                 </div>
+                                <div className='mt-3 text-danger'>{queryErrors.nearLocation}</div>
                             </div>
                         </div>
                     </form>

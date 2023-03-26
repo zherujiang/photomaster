@@ -10,7 +10,7 @@ function PhotographerContactForm(props) {
     const [formData, setFormData] = useState({});
     const [formErrors, setFormErrors] = useState({});
 
-    formData['requestedService'] = selectedService;
+    // formData['requestedService'] = selectedService;
 
     function handleFormInput(field, value) {
         setFormData({
@@ -122,6 +122,10 @@ function PhotographerContactForm(props) {
             return null
         }
     }
+
+    useEffect(() => {
+        formData['requestedService'] = selectedService;
+    }, [])
 
     // when there is an axios error, throw the error to be handled by ErrorBoundary
     const AxiosError = () => {

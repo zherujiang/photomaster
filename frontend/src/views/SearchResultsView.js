@@ -14,7 +14,7 @@ function SearchResultsView(props) {
     const [nearLocation, setNearLocation] = useState('');
     const [totalPhotographers, setTotalPhotographers] = useState(0);
     const [photographers, setPhotographers] = useState([]);
-    const [acceptTravel, setAcceptTravel] = useState(false);
+    const [acceptTravel, setAcceptTravel] = useState(true);
     const [maxPrice, setMaxPrice] = useState(1000);
     const [resultsPerPage, setResultsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -63,23 +63,23 @@ function SearchResultsView(props) {
         switch (event.target.name) {
             case 'selectService':
                 setSelectedService(event.target.value);
-                if (!!queryErrors[selectedService]) {
+                // reset query error for the current field
+                if (queryErrors['selectedService']) {
                     setQueryErrors({
                         ...queryErrors,
                         ['selectedService']: null
                     })
                 }
-                console.log(queryErrors);
                 break;
             case 'locationInput':
                 setNearLocation(event.target.value);
-                if (!!queryErrors[nearLocation]) {
+                // reset query error for the current field
+                if (queryErrors['nearLocation']) {
                     setQueryErrors({
                         ...queryErrors,
-                        [nearLocation]: null
+                        ['nearLocation']: null
                     })
                 }
-                console.log(queryErrors);
                 break;
             case 'travelToggle':
                 setAcceptTravel(!acceptTravel);
@@ -203,7 +203,7 @@ function SearchResultsView(props) {
                                         <label className='form-check-label' htmlFor='defaultLocation'>Local photographers</label>
                                     </div>
                                     <div className='form-check'>
-                                        <input className='form-check-input' type='checkbox' id='flexibleLocation' name='travelToggle' onChange={handleInputChange} />
+                                        <input className='form-check-input' type='checkbox' id='flexibleLocation' name='travelToggle' onChange={handleInputChange} checked={acceptTravel} />
                                         <label className='form-check-label' htmlFor='flexibleLocation'>Traveling photographers</label>
                                     </div>
                                 </div>
