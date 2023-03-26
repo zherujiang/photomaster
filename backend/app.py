@@ -61,6 +61,19 @@ def create_app(database_path):
             if service_image:
                 new_service.image_link = service_image
                 new_service.update()
+                
+            # add the corresponding service price in Price table
+            price_query = Price.query.order_by(Price.photographer_id).all()
+            for prices in price_query:
+                print('photographer_id', prices.photographer_id)
+                new_price_values = prices.price_values[:]
+                new_price_types = prices.price_types[:]
+                new_price_values.append(0)
+                new_price_types.append(0)
+                prices.price_values = new_price_values
+                prices.price_types = new_price_types
+                print(prices.price_values, prices.price_types)
+                prices.update()
 
             return jsonify({
                 'success': True,
@@ -116,11 +129,15 @@ def create_app(database_path):
         try:
             for photographer in affected_photographers:
                 # delete the service from photographers that provide this service
-                photographer.services.remove(service_id)
+                updated_services = photographer.services
+                updated_services.remove(service_id)
+                photographer.services = updated_services
+                print('did service list update?', photographer.services)
+                photographer.update()
                 # delete the service price info for the affected photographers
-                price_query = photographer.prices[0]
-                del price_query.price_values[service_id - 1]
-                del price_query.price_types[service_id - 1]
+                # price_query = photographer.prices[0]
+                # del price_query.price_values[service_id - 1]
+                # del price_query.price_types[service_id - 1]
 
             # delete the service category
             deleted_service = service_query.format()

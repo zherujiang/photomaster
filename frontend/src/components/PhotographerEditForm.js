@@ -178,6 +178,16 @@ function PhotographerEditForm(props) {
             let checkedServices = [...offeredServices];
             checkedServices.push(serviceId);
             setOfferedServices(checkedServices);
+
+            // initialize price to 0 for the new service
+            // let newPriceValues = [...priceValues];
+            // newPriceValues[serviceId - 1] = 0;
+            // setPriceValues(newPriceValues);
+
+            // // initialize price type for the removed service
+            // let newPriceTypes = [...priceTypes];
+            // newPriceTypes[serviceId - 1] = 0;
+            // setPriceTypes(newPriceTypes);
         }
     }
 
@@ -191,7 +201,7 @@ function PhotographerEditForm(props) {
             setPriceValues(newPriceValues);
         } else {
             let newPriceTypes = [...priceTypes];
-            newPriceTypes[priceId - 1] = parseInt(event.target.value);
+            newPriceTypes[priceId - 1] = parseInt(event.target.value) || 0;
             setPriceTypes(newPriceTypes);
         }
     }
