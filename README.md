@@ -8,6 +8,8 @@ An application that helps customers find photographers based on their desired ph
 
 The app requires authentication and uses role-based access management strategy to control different types of user behavior in the app.
 
+App currently hosted at https://photomaster.herokuapp.com/.
+
 ## About the Stack
 
 ### Backend
@@ -22,9 +24,11 @@ The backend of this app is built in Python. Python version: 3.9.15.
 - Cloud Storage: AWS S3.
     The app uses Amazon Web Service S3 to handle the upload, upload, and deletion of photos.
 
+
 ### Frontend
 
 - React and Node Package Manager (NPM)
+
 
 ## Getting Started
 
@@ -35,6 +39,7 @@ conda create --name [project name] python=3.9.15
 conda activate [project name]
 ```
 
+
 ### Install python dependencies
 
 ```bash
@@ -43,6 +48,7 @@ pip install -r requirements.txt
 ```
 This will install all the rquired packages we selected within the `requirements.txt` file
 
+
 ### Install frontend dependencies
 
 This project uses NPM to manage software dependencies. NPM Relies on the package.json file located in the frontend directory. Navigate into the `./frontend` directory and run:
@@ -50,6 +56,7 @@ This project uses NPM to manage software dependencies. NPM Relies on the package
 ```bash
 nmp install
 ```
+
 
 ### Set up Postgresql database
 
@@ -67,6 +74,7 @@ psql [database name]
 
 If the database is successfully created, you should be connected to the database and are able to use `psql` commands to directly interact with the local database.
 
+
 #### Configure environment variables
 
 Go to the `.env` file (should be added in the .gitignore) located in the root directly of `/backend` folder and update the database user credenssials. You may skip this if you are not using a local database.
@@ -81,7 +89,8 @@ python app.py
 ```
 This will run the backend as well as create tables in the database if those tables did not exist.
 
-### Stand up the app
+
+### Stand up the React app
 
 Navigate into the `./frontend` directory and run:
 
@@ -95,6 +104,7 @@ If you need to start the app in the production environment, instead of running `
 npm run build
 ```
 This will create a production build inside the `./frontend/build` folder.
+
 
 ## Authentication and Authorization
 
@@ -114,18 +124,21 @@ The authentication system used for this app is Auth0. Steps to create and connec
 5. In the API settings, create permissions for the backend endpoints where permissions are required.
 6. Go to User Management to create roles. Assign permissions to roles.
 
+
 #### Configure environment variables
 
 Configure environment variables in the `./backend/env` file to match the Auth0 domain and API settings.
 Open the `./frontend/src/App.js` file and ensure the app urls match the urls in the application settings.
 
-### AWS S3
+
+## AWS S3
 
 ### Set up AWS S3 service
 
 1. Create an AWS account.
 2. Go to S3 service and create a new bucket.
 3. In the S3 settings, create a new access key pair and take note of the key pair before closing it.
+
 
 #### Configure environment variables
 
