@@ -30,6 +30,8 @@ function PhotographerEditForm(props) {
     const [updateSuccessful, setUpdateSuccessful] = useState(false);
 
     const defaultProfilePhoto = 'https://photomasterbucket.s3.us-west-2.amazonaws.com/fixed_profile_photo_default_800.png'
+    const [fileError, setFileError] = useState('');
+    const ALLOWED_FILE_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
     // server request to get all service categories
     function getServices() {
@@ -239,8 +241,17 @@ function PhotographerEditForm(props) {
         }
 
         const file = e.target.files[0];
-        setProfilePhotoURL(URL.createObjectURL(file));
-        setProfilePhotoFile(file);
+
+        const fileNameParts = file.name.split('.')
+        const fileExtension = fileNameParts[fileNameParts.length - 1];
+        if (ALLOWED_FILE_EXTENSIONS.includes(fileExtension.toLowerCase())) {
+            setProfilePhotoURL(URL.createObjectURL(file));
+            setProfilePhotoFile(file);
+            setFileError('');
+        } else {
+            setFileError('Error: File type not allowed');
+            console.log(fileError);
+        }
         // console.log('profile photo url', URL.createObjectURL(file));
     }
 
@@ -396,6 +407,7 @@ function PhotographerEditForm(props) {
                         Select Photo
                     </label>
                     <input id="profile-photo-upload" type='file' hidden onChange={handleUploadProfilePhoto} />
+                    <div><span className='text-danger'>{fileError}</span></div>
                     <button type='button' className='btn btn-link' onClick={handleDeleteProfilePhoto}>Delete Photo</button>
                 </div>
             </div>

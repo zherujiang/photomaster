@@ -16,12 +16,13 @@ function InitializeProfileView() {
         <div id='initialize-profile-view' className='container py-4'>
             <ErrorBoundary>
                 <div className='row'>
-                    {initializeSuccessful && <div className='col'>
-                        <div className='alert alert-success alert-dismissible' role='alert'>
-                            <div>Account created successfully!</div>
-                            <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-                        </div>
-                    </div>}
+                    {initializeSuccessful &&
+                        <div className='col'>
+                            <div className='alert alert-success alert-dismissible' role='alert'>
+                                <div>Account created successfully!</div>
+                                <button type='button' className='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                            </div>
+                        </div>}
                 </div>
                 <div className='row justify-content-center mt-2'>
                     <div className='col col-auto'>

@@ -105,16 +105,16 @@ The authentication system used for this app is Auth0. Steps to create and connec
     - Select a unique tenant domain. (This might be assigned by default if using a free account)
 2. Create a new single page web application.
 3. Go to the application settings, fill out all required information.
-    - Callback urls
-    - Logout urls that matches the frontend app design.
-    - Allowed web origins
+    - Allowed Callback URLs
+    - Allowed Logout URLs that matches the frontend app design.
+    - Allowed Web Origins
 4. Create an API for the new application.
     - Enable Role-based Access Control
     - Enable Add Permission in the Access Token
 5. In the API settings, create permissions for the backend endpoints where permissions are required.
 6. Go to User Management to create roles. Assign permissions to roles.
 
-### Configure environment variables
+#### Configure environment variables
 
 Configure environment variables in the `./backend/env` file to match the Auth0 domain and API settings.
 Open the `./frontend/src/App.js` file and ensure the app urls match the urls in the application settings.
@@ -127,6 +127,6 @@ Open the `./frontend/src/App.js` file and ensure the app urls match the urls in 
 2. Go to S3 service and create a new bucket.
 3. In the S3 settings, create a new access key pair and take note of the key pair before closing it.
 
-### Configure environment variables
+#### Configure environment variables
 
 Configure environment variables in the `./backend/env` file to match the S3 bucket.

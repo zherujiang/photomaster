@@ -10,12 +10,14 @@ function EditPhotosView() {
     const { photographerId } = useParams();
     const [axiosError, setAxiosError] = useState(null);
     const { loadLocalJWT, JWTReady, buildAuthHeader } = useAccessToken();
-    // const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [existingPhotoURLs, setExistingPhotoURLs] = useState([]);
     const [uploadStatus, setUploadStatus] = useState('Upload photos');
     const [deleteStatus, setDeleteStatus] = useState('Delete selected photos');
     const [selectedPhotos, setSelectedPhotos] = useState([]);
+
+    const [fileError, setFileError] = useState('');
+    const ALLOWED_FILE_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
     // Server request to get all existing photos from the database
     function getPhotosFromDatabase() {
@@ -41,7 +43,15 @@ function EditPhotosView() {
 
         var newPhotosList = new FormData();
         for (const file of e.target.files) {
-            newPhotosList.append('image', file);
+            const fileNameParts = file.name.split('.')
+            const fileExtension = fileNameParts[fileNameParts.length - 1];
+            if (ALLOWED_FILE_EXTENSIONS.includes(fileExtension.toLowerCase())) {
+                newPhotosList.append('image', file);
+                setFileError('');
+            } else {
+                setFileError('Error: File type not allowed');
+                console.log(fileError);
+            }
         }
         axios.post(
             `/photos/${photographerId}`,
@@ -138,6 +148,7 @@ function EditPhotosView() {
                         </label>
                         <input id="file-upload" type='file' hidden onChange={handleUpload} multiple="multiple" />
                     </div>
+                    <div className='mt-2 mb-3'>Allowed file format: JPG, JPEG, PNG <span className='text-danger'>{fileError}</span></div>
                 </div>
                 <PhotoGrid />
                 <div className='row mt-3 text-center'>
