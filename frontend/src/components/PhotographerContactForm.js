@@ -10,8 +10,6 @@ function PhotographerContactForm(props) {
     const [formData, setFormData] = useState({});
     const [formErrors, setFormErrors] = useState({});
 
-    // formData['requestedService'] = selectedService;
-
     function handleFormInput(field, value) {
         setFormData({
             ...formData,
@@ -147,26 +145,30 @@ function PhotographerContactForm(props) {
                 </div>
                 <div className='row g-3 mb-3'>
                     <div className='col'>
-                        <input type='text' placeholder='First name' className={`form-control ${formErrors.customerFirstName ? 'is-invalid' : ''}`} aria-label='First name'
+                        <input type='text' placeholder='First name' aria-label='First name'
+                            className={`form-control ${formErrors.customerFirstName ? 'is-invalid' : ''}`}
                             value={formData.customerFirstName} onChange={(e) => handleFormInput('customerFirstName', e.target.value)} />
                         <div className='invalid-feedback'>{formErrors.customerFirstName}</div>
                     </div>
                     <div className='col'>
-                        <input type='text' placeholder='Last name' className={`form-control ${formErrors.customerLastName ? 'is-invalid' : ''}`} aria-label='Last name'
+                        <input type='text' placeholder='Last name' aria-label='Last name'
+                            className={`form-control ${formErrors.customerLastName ? 'is-invalid' : ''}`}
                             value={formData.customerLastName} onChange={(e) => handleFormInput('customerLastName', e.target.value)} />
                         <div className='invalid-feedback'>{formErrors.customerLastName}</div>
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <input type='email' placeholder='Your email' className={`form-control ${formErrors.customerEmail ? 'is-invalid' : ''}`} aria-label='email'
+                        <input type='email' placeholder='Your email' aria-label='email'
+                            className={`form-control ${formErrors.customerEmail ? 'is-invalid' : ''}`}
                             value={formData.customerEmail} onChange={(e) => handleFormInput('customerEmail', e.target.value)} />
                         <div className='invalid-feedback'>{formErrors.customerEmail}</div>
                     </div>
                 </div>
                 <div className='row mb-3'>
                     <div className='col'>
-                        <input type='text' placeholder='Phone' className={`form-control ${formErrors.customerPhone ? 'is-invalid' : ''}`} aria-label='phone'
+                        <input type='text' placeholder='Phone' aria-label='phone'
+                            className={`form-control ${formErrors.customerPhone ? 'is-invalid' : ''}`}
                             value={formData.customerPhone} onChange={(e) => handleFormInput('customerPhone', e.target.value)} />
                         <div className='invalid-feedback'>{formErrors.customerPhone}</div>
                     </div>

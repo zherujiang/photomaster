@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccessToken } from '../hooks/AuthHook';
-// import { useS3Bucket } from '../hooks/S3Hook';
 import axios from "axios";
 import '../stylesheets/PhotoGrid.css'
 
@@ -10,11 +9,11 @@ function PhotographerEditForm(props) {
     const { photographerId } = props;
     const [axiosError, setAxiosError] = useState(null);
     const { JWTReady, buildAuthHeader } = useAccessToken();
-    // const { uploadToS3, deleteFromS3 } = useS3Bucket();
 
     const [photographerDetails, setPhotographerDetails] = useState(undefined);
     const [allServices, setAllServices] = useState([]);
     const [prices, setPrices] = useState(undefined);
+    const [formErrors, setFormErrors] = useState({});
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -87,44 +86,68 @@ function PhotographerEditForm(props) {
         }
     }, [photographerDetails, prices])
 
-    // server request to submit photographer information updates
-    function submitProfileUpdate() {
-        var profileData = {
-            'name': name,
-            'city': city,
-            'can_travel': canTravel,
-            'address': address,
-            'services': offeredServices,
-            'profile_photo_url': profilePhotoURL,
-            'portfolio_link': portfolioLink,
-            'bio': bio,
-            'price_values': priceValues,
-            'price_types': priceTypes
+    function validateForm() {
+        const newErrors = {};
+        if (!name || name === '') {
+            newErrors.name = 'Please enter your name'
+        };
+        if (!city || city === '') {
+            newErrors.city = 'Please enter a city to help customers find you'
+        };
+        // clean up price values before submitting form
+        for (let i = 0; i < priceValues.length; i++) {
+            if (isNaN(priceValues[i])) {
+                priceValues[i] = 0;
+            }
         }
+        // console.log(priceValues);
+        return newErrors;
+    }
 
-        var formData = new FormData();
-        formData.append('data', JSON.stringify(profileData))
-        if (profilePhotoFile) {
-            formData.append('image', profilePhotoFile)
+    // server request to submit photographer information updates
+    function submitProfileUpdate(event) {
+        event.preventDefault();
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setFormErrors(validationErrors);
+        } else {
+            var profileData = {
+                'name': name,
+                'city': city,
+                'can_travel': canTravel,
+                'address': address,
+                'services': offeredServices,
+                'profile_photo_url': profilePhotoURL,
+                'portfolio_link': portfolioLink,
+                'bio': bio,
+                'price_values': priceValues,
+                'price_types': priceTypes
+            }
+
+            var formData = new FormData();
+            formData.append('data', JSON.stringify(profileData))
+            if (profilePhotoFile) {
+                formData.append('image', profilePhotoFile)
+            }
+            axios.patch(
+                `/photographer-edits/${photographerId}`,
+                formData,
+                buildAuthHeader()
+            )
+                .then(response => {
+                    const data = response.data;
+                    setPhotographerDetails(data['photographer_details']);
+                    setPrices(data['prices']);
+                    setUpdateSuccessful(true);
+                    setTimeout(() => {
+                        navigate('/account');
+                    }, 2000);
+                })
+                .catch(error => {
+                    setAxiosError(error);
+                    console.log(error);
+                })
         }
-        axios.patch(
-            `/photographer-edits/${photographerId}`,
-            formData,
-            buildAuthHeader()
-        )
-            .then(response => {
-                const data = response.data;
-                setPhotographerDetails(data['photographer_details']);
-                setPrices(data['prices']);
-                setUpdateSuccessful(true);
-                setTimeout(() => {
-                    navigate('/account');
-                }, 2000);
-            })
-            .catch(error => {
-                setAxiosError(error);
-                console.log(error);
-            })
     }
 
     function cancelProfileUpdate() {
@@ -135,9 +158,23 @@ function PhotographerEditForm(props) {
         switch (event.target.name) {
             case 'name':
                 setName(event.target.value);
+                // reset form error for the current field
+                if (formErrors['name']) {
+                    setFormErrors({
+                        ...formErrors,
+                        ['name']: null
+                    })
+                }
                 break;
             case 'city':
                 setCity(event.target.value);
+                // reset form error for the current field
+                if (formErrors['city']) {
+                    setFormErrors({
+                        ...formErrors,
+                        ['city']: null
+                    })
+                }
                 break;
             case 'travel':
                 setCanTravel(event.target.checked);
@@ -178,16 +215,6 @@ function PhotographerEditForm(props) {
             let checkedServices = [...offeredServices];
             checkedServices.push(serviceId);
             setOfferedServices(checkedServices);
-
-            // initialize price to 0 for the new service
-            // let newPriceValues = [...priceValues];
-            // newPriceValues[serviceId - 1] = 0;
-            // setPriceValues(newPriceValues);
-
-            // // initialize price type for the removed service
-            // let newPriceTypes = [...priceTypes];
-            // newPriceTypes[serviceId - 1] = 0;
-            // setPriceTypes(newPriceTypes);
         }
     }
 
@@ -272,8 +299,10 @@ function PhotographerEditForm(props) {
                                     <label className='form-label' htmlFor='nameInput'>Name</label>
                                 </div>
                                 <div className='col col-12 col-md-9'>
-                                    <input className='form-control' type='text' id='nameInput'
+                                    <input type='text' id='nameInput'
+                                        className={`form-control ${formErrors.name ? 'is-invalid' : ''}`}
                                         name='name' value={name} onChange={handleInputChange} />
+                                    <div className='invalid-feedback'>{formErrors.name}</div>
                                 </div>
                             </div>
                             <div className='row mb-3'>
@@ -290,8 +319,10 @@ function PhotographerEditForm(props) {
                                     <label className='form-label' htmlFor='cityInput'>City</label>
                                 </div>
                                 <div className='col col-12 col-md-9'>
-                                    <input className='form-control' type='text' id='cityInput'
+                                    <input type='text' id='cityInput'
+                                        className={`form-control ${formErrors.city ? 'is-invalid' : ''}`}
                                         name='city' value={city} onChange={handleInputChange} />
+                                    <div className='invalid-feedback'>{formErrors.city}</div>
                                     <div className='form-check my-2'>
                                         <input className='form-check-input' type='checkbox' id='travelCheckbox'
                                             name='travel' checked={canTravel ? true : false} onChange={handleInputChange} />

@@ -65,14 +65,12 @@ def create_app(database_path):
             # add the corresponding service price in Price table
             price_query = Price.query.order_by(Price.photographer_id).all()
             for prices in price_query:
-                print('photographer_id', prices.photographer_id)
                 new_price_values = prices.price_values[:]
                 new_price_types = prices.price_types[:]
                 new_price_values.append(0)
                 new_price_types.append(0)
                 prices.price_values = new_price_values
                 prices.price_types = new_price_types
-                print(prices.price_values, prices.price_types)
                 prices.update()
 
             return jsonify({
@@ -129,12 +127,11 @@ def create_app(database_path):
         try:
             for photographer in affected_photographers:
                 # delete the service from photographers that provide this service
-                updated_services = photographer.services
+                updated_services = photographer.services[:]
                 updated_services.remove(service_id)
                 photographer.services = updated_services
-                print('did service list update?', photographer.services)
                 photographer.update()
-                # delete the service price info for the affected photographers
+                # keep the price arrays in order for their indexed to match the service_id
                 # price_query = photographer.prices[0]
                 # del price_query.price_values[service_id - 1]
                 # del price_query.price_types[service_id - 1]
@@ -283,8 +280,9 @@ def create_app(database_path):
                 # initialize price table for the new photographer
                 services_query = Service.query.order_by(Service.id).all()
                 num_services = len(services_query)
+                max_service_id = services_query[num_services - 1].id
                 new_prices = Price(photographer_id, [
-                                   0]*num_services, [0]*num_services)
+                                   0]*max_service_id, [0]*max_service_id)
                 new_prices.insert()
 
                 return jsonify({
